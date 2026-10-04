@@ -74,18 +74,77 @@ def get_mbti_type_from_filename(filename: str) -> Optional[str]:
     match = re.match(r"mbti-([a-z]{4})\.md$", filename, re.IGNORECASE)
     return match.group(1).upper() if match else None
 
+MBTI_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
+              "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
+
+
+def parse_skill(filepath: Path) -> dict:
+    """从 skill 文件读出标题和"适用任务"，用于 prompt 描述和任务索引
+
+    标题行形如 "# ESTJ - 总经理"；适用任务是一张 | 任务 | 使用场景 | 表，
+    没有主位的类型写的是一行括号说明。
+    """
+    lines = filepath.read_text(encoding="utf-8").splitlines()
+    title = lines[0].lstrip("# ").split(" - ", 1)[-1].strip() if lines else ""
+    tasks, note, in_section = [], "", False
+    for line in lines:
+        if line.startswith("## "):
+            in_section = line.strip() == "## 适用任务"
+            continue
+        if not in_section or not line.strip():
+            continue
+        if line.startswith("|"):
+            cells = [c.strip() for c in line.strip("|").split("|")]
+            if len(cells) >= 2 and cells[0] not in ("任务", "") and not set(cells[0]) <= set("-: "):
+                tasks.append(f"{cells[0]}: {cells[1]}")
+        elif not note:
+            note = line.strip().strip("（）()")
+    return {"title": title, "tasks": tasks, "note": note}
+
+
 def scan_skills() -> list[dict]:
     """扫描 skills/ 目录，返回所有 MBTI prompt 列表"""
     prompts = []
     for filepath in sorted(SKILLS_DIR.glob("mbti-*.md")):
         mbti_type = get_mbti_type_from_filename(filepath.name)
         if mbti_type:
+            info = parse_skill(filepath)
+            summary = "；".join(info["tasks"]) or info["note"]
             prompts.append({
                 "type": mbti_type,
                 "filepath": filepath,
-                "description": f"MindPersona {mbti_type} 性格适配"
+                "title": info["title"],
+                "summary": summary,
+                "description": f"MindPersona {mbti_type} {info['title']}：{summary}".rstrip("：")
             })
     return prompts
+
+
+def build_task_index() -> str:
+    """所有人格的任务索引，放进 load_persona 的描述里，模型据此推荐类型"""
+    return "\n".join(f"- {p['type']} {p['title']}：{p['summary']}" for p in scan_skills())
+
+
+def build_persona_prompt(mbti_type: str) -> str:
+    """skill 原文 + 用户的私人调整 + 反馈触发说明"""
+    mbti_lower = mbti_type.lower()
+    skill_file = SKILLS_DIR / f"mbti-{mbti_lower}.md"
+    if not skill_file.exists():
+        raise FileNotFoundError(f"Skill file not found: {skill_file}")
+
+    content = skill_file.read_text(encoding="utf-8")
+
+    # 尝试加载 customized 个性化（如果存在）
+    customized_file = MEMORY_DIR / f"customized-{mbti_lower}.md"
+    if customized_file.exists():
+        customized = customized_file.read_text(encoding="utf-8")
+        # 提取 PERSONAL_ADJUSTMENTS_HEADER 部分（所有反馈条目）
+        match = re.search(rf"{PERSONAL_ADJUSTMENTS_HEADER}\s*\n(.*?)(?=<!-- 格式|$)", customized, re.DOTALL)
+        if match:
+            personal_adjustments = match.group(1).strip()
+            content += f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{personal_adjustments}"
+
+    return content + TRIGGER_INSTRUCTION.format(mbti_type=mbti_lower)
 
 CUSTOMIZED_TEMPLATE = """# {mbti_type} 进化版 - 你的私人部分
 
@@ -177,37 +236,40 @@ async def list_prompts() -> list[Prompt]:
 
 @server.get_prompt()
 async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptResult:
-    """当用户调用 /mbti-intj 时，读取并返回对应 prompt"""
-    # 提取 MBTI 类型
+    """当用户调用 /mbti-intj 时，读取并返回对应 prompt
+
+    Claude Code 中显示为 /mcp__mindpersona__mbti-intj
+    """
     mbti_type = name.replace("mbti-", "").upper()
-
-    # 读取主 prompt
-    skill_file = SKILLS_DIR / f"mbti-{mbti_type.lower()}.md"
-    if not skill_file.exists():
-        raise FileNotFoundError(f"Skill file not found: {skill_file}")
-
-    content = skill_file.read_text(encoding="utf-8")
-
-    # 尝试加载 customized 个性化（如果存在）
-    customized_file = MEMORY_DIR / f"customized-{mbti_type.lower()}.md"
-    if customized_file.exists():
-        customized = customized_file.read_text(encoding="utf-8")
-        # 提取 PERSONAL_ADJUSTMENTS_HEADER 部分（所有反馈条目）
-        match = re.search(rf"{PERSONAL_ADJUSTMENTS_HEADER}\s*\n(.*?)(?=<!-- 格式|$)", customized, re.DOTALL)
-        if match:
-            personal_adjustments = match.group(1).strip()
-            content += f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{personal_adjustments}"
-
-    trigger = TRIGGER_INSTRUCTION.format(mbti_type=mbti_type.lower())
     return GetPromptResult(
         description=f"MindPersona {mbti_type} 性格适配",
-        messages=[{"role": "user", "content": {"type": "text", "text": content + trigger}}]
+        messages=[{"role": "user", "content": {"type": "text", "text": build_persona_prompt(mbti_type)}}]
     )
 
 @server.list_tools()
 async def list_tools() -> list[Tool]:
     """列出所有可用工具"""
     return [
+        Tool(
+            name="load_persona",
+            description=(
+                "加载一个 MindPersona 人格，之后按返回的说明回答。"
+                "用户说\"用 ESTJ 帮我…\"/\"Use INTJ to…\"时调用；"
+                "用户问\"这个任务用哪个人格\"或要求自动选择时，按下面的任务索引选出最合适的类型再调用，并告诉用户选了哪个、为什么。\n"
+                "任务索引：\n" + build_task_index()
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "mbti_type": {
+                        "type": "string",
+                        "description": "MBTI 类型（如 intj, estj）",
+                        "enum": MBTI_TYPES
+                    }
+                },
+                "required": ["mbti_type"]
+            }
+        ),
         Tool(
             name="update_mbti_memory",
             description="当用户表达不满、抱怨或负面情绪时，将反馈追加到 customized-{mbti_type}.md。触发条件：用户语气不满、抱怨、要求改变交流方式。",
@@ -217,8 +279,7 @@ async def list_tools() -> list[Tool]:
                     "mbti_type": {
                         "type": "string",
                         "description": "当前 MBTI 类型（如 intj, entj, infp）",
-                        "enum": ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
-                                "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
+                        "enum": MBTI_TYPES
                     },
                     "feedback_summary": {
                         "type": "string",
@@ -233,7 +294,12 @@ async def list_tools() -> list[Tool]:
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     """执行工具调用"""
-    if name == "update_mbti_memory":
+    if name == "load_persona":
+        mbti_type = arguments.get("mbti_type", "").lower()
+        if mbti_type not in MBTI_TYPES:
+            return [TextContent(type="text", text=f"错误: 未知类型 {mbti_type!r}，可选: {', '.join(MBTI_TYPES)}")]
+        return [TextContent(type="text", text=build_persona_prompt(mbti_type))]
+    elif name == "update_mbti_memory":
         mbti_type = arguments.get("mbti_type", "").lower()
         feedback_summary = arguments.get("feedback_summary", "")
 
