@@ -4,8 +4,9 @@ import shutil
 from pathlib import Path
 import sys
 
-sys.path.insert(0, str(Path(__file__).parent.parent))
-from mcp_server import append_to_customized, get_customized_template, MEMORY_DIR
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+from mindpersona import server as mcp_server
+from mindpersona.server import append_to_customized, get_customized_template, MEMORY_DIR
 
 @pytest.fixture
 def temp_memory_dir():
@@ -14,7 +15,6 @@ def temp_memory_dir():
     original_dir = MEMORY_DIR
 
     # 临时替换 MEMORY_DIR
-    import mcp_server
     mcp_server.MEMORY_DIR = Path(temp_dir)
 
     yield Path(temp_dir)

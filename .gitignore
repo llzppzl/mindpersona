@@ -6,3 +6,11 @@ memory/user-personality.json
 .worktrees/
 docs/
 NEXT_VERSION_ISSUES.md
+
+# Python
+__pycache__/
+*.pyc
+*.bak
+build/
+dist/
+*.egg-info/
