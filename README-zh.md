@@ -2,6 +2,57 @@
 [English](./readme.md) | [中文](./README-zh.md)
 > 让 AI Agent 拥有"性格"，告别千篇一律的通用回答
 
+## 🚀 快速开始
+
+### Claude Code（推荐，一条命令）
+
+需要先装 [uv](https://docs.astral.sh/uv/getting-started/installation/)。没有 Python 3.10+ 时 uv 会自动下载。
+
+```bash
+claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/mindpersona mindpersona
+```
+
+重启 Claude Code，之后在**任何**项目里：
+
+| 你输入 | 会发生什么 |
+|--------|-----------|
+| `用 ESTJ 帮我把这件事排成本周计划` | Claude 加载 ESTJ 人格（`load_persona` 工具），按它的风格回答 |
+| `这个任务适合哪个人格？我周五前要在两个 offer 里选一个` | Claude 按下方「任务索引」选一个类型，说明理由，然后加载 |
+| `/mcp__mindpersona__mbti-intj` | 用斜杠 prompt 加载 INTJ（Claude Code 中 MCP prompt 的名字是 `/mcp__<server>__<prompt>`） |
+| `太长了，别再用表格` | Claude 把这条写进你的私人档案，下次自动遵守 |
+
+反馈保存在 `~/.mindpersona/memory/customized-<类型>.md`。想放在别处，设置环境变量 `MINDPERSONA_MEMORY_DIR`。
+
+不用 uv：
+
+```bash
+pip install git+https://github.com/llzppzl/mindpersona
+claude mcp add mindpersona -s user -- mindpersona
+```
+
+### 任何聊天应用（免安装）
+
+打开 [`skills/`](./skills) 里的文件，例如 [`skills/mbti-intj.md`](./skills/mbti-intj.md)，粘贴到 ChatGPT 自定义指令、Claude Project 或你的 system prompt 里。
+
+### 其他平台
+
+| 平台 | 位置 |
+|------|------|
+| Semantic Kernel | [`platform/semantic-kernel/`](./platform/semantic-kernel) |
+| Coze / Dify | [`platform/saas/IMPORT_GUIDE.md`](./platform/saas/IMPORT_GUIDE.md) |
+| API 直连 | [`platform/api/prompts.yaml`](./platform/api/prompts.yaml) |
+
+### 从源码运行
+
+```bash
+git clone https://github.com/llzppzl/mindpersona.git
+cd mindpersona
+pip install -e .          # Python 3.10+
+python -m pytest tests
+```
+
+---
+
 ## 痛点
 
 1. **你是一个"效率至上、直奔主题"的实干派**
@@ -91,46 +142,17 @@
 
 ---
 
-## 🚀 快速开始
-
-### 1. 下载项目
-
-```bash
-git clone <repo-url>
-cd mindpersona
-```
-
-### 2. 选择你的平台
-
-| 平台 | 阅读 |
-|------|------|
-| Claude Code | platform/claude/README.md |
-| Semantic Kernel | platform/semantic-kernel/ |
-| Coze/Dify | platform/saas/IMPORT_GUIDE.md |
-| API 直连 | platform/api/prompts.yaml |
-
-### 3. 开始使用
-
-**方式一：按任务找 MBTI**（推荐）
-查看上方「任务索引」，直接说"用 ESTJ 帮我分析这个方案"
-
-**方式二：描述任务，让 AI 推荐**
-"分析我的任务适合哪个 MBTI：我要做个重大决策，时间很紧"
-
-**方式三：按性格切换**
-直接说 MBTI 类型，如 "entj" 或 "/mbti-entj"
-
----
-
 ## 📁 文件结构
 
 | 文件/目录 | 用途 |
 |-----------|------|
 | `CLAUDE.md` | 项目指令（AI 自动加载） |
 | `skills/mbti-*.md` | 通用 baseline（16种 MBTI） |
-| `memory/customized-*.md` | 你的私人进化版（本地，不上传 git） |
+| `memory/customized-*.md` | 从源码运行时的私人进化版（安装后在 `~/.mindpersona/memory/`；不上传 git） |
+| `mindpersona/server.py` | MCP Server：斜杠 prompt、`load_persona`、`update_mbti_memory` |
+| `tests/` | 测试（`python -m pytest tests`） |
 | `platform/` | 跨平台适配层 |
-| `platform/claude/` | Claude MCP Server 适配 |
+| `platform/claude/` | Claude Code 安装说明、旧版 `mcp_server.py` 入口 |
 | `platform/semantic-kernel/` | Semantic Kernel 框架适配 |
 | `platform/saas/` | SaaS 平台（Coze/Dify）导入指南 |
 | `platform/api/` | API 直连提示词索引 |

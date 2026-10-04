@@ -1,27 +1,32 @@
 # Contributing to MindPersona
 
-## 开发环境
+## Setup
 
 ```bash
-# 克隆项目
-git clone <repository-url>
+git clone https://github.com/llzppzl/mindpersona.git
 cd mindpersona
-
-# 安装依赖 (如有)
-pip install -e .
-
-# 运行测试
-python -m pytest tests/ -v
+pip install -e .          # Python 3.10+
+python -m pytest tests -v
 ```
 
-## 添加新的 MBTI 预设
+Try your changes in Claude Code without installing:
 
-1. 在 `presets/` 目录创建新文件：`preset-{mbti}-{nickname}.md`
-2. 参考现有预设格式定义交互层、架构层、记忆层
-3. 添加测试用例
+```bash
+claude mcp add mindpersona-dev -s user -- python /absolute/path/to/mindpersona/platform/claude/mcp_server.py
+```
 
-## 代码规范
+## Changing or adding a persona
 
-- 使用 Python 3.10+
-- 遵循 PEP 8
-- 所有新功能需要测试
+Each persona is one file: `skills/mbti-<type>.md`. Keep this structure:
+
+- First line: `# ESTJ - 总经理` (type, then nickname). The nickname is shown in prompt descriptions.
+- A `## 适用任务` section with a `| 任务 | 使用场景 |` table. The MCP server builds the task index from these rows; it is what Claude uses to recommend a type. If a type has no main task, write one line in brackets instead.
+- `## 交互层`, `## 架构层`, `## 记忆层`, as in the existing files.
+
+Run the tests afterwards; `tests/test_load_persona.py` checks that every skill produces an index entry.
+
+## Code style
+
+- Python 3.10+
+- PEP 8
+- New features need tests

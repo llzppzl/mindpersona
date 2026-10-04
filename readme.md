@@ -2,6 +2,57 @@
 [English](./readme.md) | [中文](./README-zh.md)
 > Give your AI Agent a "personality" — stop settling for generic responses
 
+## 🚀 Quick Start
+
+### Claude Code (recommended, 1 command)
+
+Needs [uv](https://docs.astral.sh/uv/getting-started/installation/). uv downloads Python 3.10+ for you if you don't have it.
+
+```bash
+claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/mindpersona mindpersona
+```
+
+Restart Claude Code. Then, in **any** project:
+
+| You type | What happens |
+|----------|--------------|
+| `Use ESTJ to turn this into a plan for this week` | Claude loads the ESTJ persona (`load_persona` tool) and answers in that style |
+| `Which persona fits this? I must choose between two offers by Friday` | Claude picks a type from the Task Index below, tells you why, and loads it |
+| `/mcp__mindpersona__mbti-intj` | Loads INTJ as a slash prompt (Claude Code names MCP prompts `/mcp__<server>__<prompt>`) |
+| `Too long. Stop using tables.` | Claude saves this to your personal file and follows it next time |
+
+Your feedback is stored in `~/.mindpersona/memory/customized-<type>.md`. Set `MINDPERSONA_MEMORY_DIR` to keep it somewhere else.
+
+Without uv:
+
+```bash
+pip install git+https://github.com/llzppzl/mindpersona
+claude mcp add mindpersona -s user -- mindpersona
+```
+
+### Any chat app (no install)
+
+Open a file in [`skills/`](./skills), for example [`skills/mbti-intj.md`](./skills/mbti-intj.md), and paste it into ChatGPT custom instructions, a Claude Project, or your system prompt. The skills are written in Chinese; the model will still answer in your language.
+
+### Other platforms
+
+| Platform | Where |
+|----------|-------|
+| Semantic Kernel | [`platform/semantic-kernel/`](./platform/semantic-kernel) |
+| Coze / Dify | [`platform/saas/IMPORT_GUIDE.md`](./platform/saas/IMPORT_GUIDE.md) |
+| API direct | [`platform/api/prompts.yaml`](./platform/api/prompts.yaml) |
+
+### From source
+
+```bash
+git clone https://github.com/llzppzl/mindpersona.git
+cd mindpersona
+pip install -e .          # Python 3.10+
+python -m pytest tests
+```
+
+---
+
 ## Pain Points
 
 1. **You are a "get-things-done, straight-to-the-point" type**
@@ -83,42 +134,11 @@ Accumulate "minefields" and "north star metrics" to eliminate repeated tuning co
 
 ```
 Diagnose MBTI → Configure interaction format & tone (S/N + T/F)
-             → Build workflow that顺着天性 or 弥补短板 (J/P)
-             → Solidify into long-term memory (memory/customized-{mbti}.md)
+             → Build a workflow that follows your nature or covers your blind spots (J/P)
+             → Save it to long-term memory (memory/customized-{mbti}.md)
 ```
 
 > Don't try to make AI adapt to everyone. Use this framework to make AI obey only you.
-
----
-
-## 🚀 Quick Start
-
-### 1. Clone the Project
-
-```bash
-git clone <repo-url>
-cd mindpersona
-```
-
-### 2. Choose Your Platform
-
-| Platform | Reference |
-|----------|-----------|
-| Claude Code | platform/claude/README.md |
-| Semantic Kernel | platform/semantic-kernel/ |
-| Coze/Dify | platform/saas/IMPORT_GUIDE.md |
-| API Direct | platform/api/prompts.yaml |
-
-### 3. Start Using
-
-**Method 1: Find MBTI by Task** (Recommended)
-See the "Task Index" above, just say "Use ESTJ to analyze this plan"
-
-**Method 2: Describe Task, Let AI Recommend**
-"Analyze which MBTI fits my task: I'm making a major decision with limited time"
-
-**Method 3: Switch by Personality Type**
-Just say the MBTI type, like "entj" or "/mbti-entj"
 
 ---
 
@@ -128,9 +148,11 @@ Just say the MBTI type, like "entj" or "/mbti-entj"
 |---------------|---------|
 | `CLAUDE.md` | Project instructions (auto-loaded by AI) |
 | `skills/mbti-*.md` | Universal baseline (16 MBTI types) |
-| `memory/customized-*.md` | Your personal evolution (local, not uploaded to git) |
+| `memory/customized-*.md` | Your personal evolution when running from source (installed: `~/.mindpersona/memory/`; never committed) |
+| `mindpersona/server.py` | MCP server: slash prompts, `load_persona`, `update_mbti_memory` |
+| `tests/` | Tests (`python -m pytest tests`) |
 | `platform/` | Cross-platform adaptation layer |
-| `platform/claude/` | Claude MCP Server adapter |
+| `platform/claude/` | Claude Code install guide and legacy `mcp_server.py` entry |
 | `platform/semantic-kernel/` | Semantic Kernel framework adapter |
 | `platform/saas/` | SaaS platform (Coze/Dify) import guide |
 | `platform/api/` | API direct prompt index |
