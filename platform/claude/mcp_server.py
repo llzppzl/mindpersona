@@ -88,57 +88,91 @@ def get_customized_template(mbti_type: str, feedback_summary: str) -> str:
     )
     return result.replace("{HDR}", PERSONAL_ADJUSTMENTS_HEADER)
 
+MBTI_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
+              "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
+MAX_SUMMARY_CHARS = 300
+# Prefix of a saved entry: "- [2026-04-15 12:34] ", or a hand-written "- （2026-04-04）"
+ENTRY_PREFIX = re.compile(r"^-\s*(\[[^\]]*\]|（[^）]*）|\([^)]*\))?\s*")
+
+
+def normalize_mbti_type(mbti_type: str) -> Optional[str]:
+    """The lowercase MBTI type, or None if it is not one of the 16 (this also blocks paths like ../)"""
+    t = (mbti_type or "").strip().lower()
+    return t if t in MBTI_TYPES else None
+
+
+def clean_summary(feedback_summary: str) -> str:
+    """Keep it on one line: one line is one adjustment. A line break would start a new heading or
+    paragraph in the file, which is then loaded as part of the persona prompt."""
+    return " ".join((feedback_summary or "").split())
+
+
+def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
+    """Insert new_entry after the last entry under PERSONAL_ADJUSTMENTS_HEADER.
+    Returns None if this adjustment is already saved."""
+    lines = content.splitlines(keepends=True)
+    header = next((i for i, line in enumerate(lines) if line.strip() == PERSONAL_ADJUSTMENTS_HEADER), None)
+    if header is None:
+        # No PERSONAL_ADJUSTMENTS_HEADER yet: add it at the end of the file
+        return content.rstrip() + f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{new_entry}"
+
+    # The section ends at the next heading
+    section_end = next((i for i in range(header + 1, len(lines)) if lines[i].startswith("#")), len(lines))
+    entries = [i for i in range(header + 1, section_end) if lines[i].lstrip().startswith("-")]
+    if any(ENTRY_PREFIX.sub("", lines[i].strip()) == summary for i in entries):
+        return None
+
+    if entries:
+        insert_at = entries[-1] + 1
+    else:
+        insert_at = header + 1
+        if insert_at < len(lines) and not lines[insert_at].strip():
+            insert_at += 1  # keep the blank line under the heading
+    if insert_at > 0 and not lines[insert_at - 1].endswith("\n"):
+        lines[insert_at - 1] += "\n"
+    lines.insert(insert_at, new_entry)
+    return "".join(lines)
+
+
 def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, str]:
     """
-    向 customized-{type}.md 追加反馈
+    Append feedback to customized-{type}.md
     Returns: (success: bool, message: str)
     """
-    mbti_lower = mbti_type.lower()
-    customized_file = MEMORY_DIR / f"customized-{mbti_lower}.md"
+    mbti_lower = normalize_mbti_type(mbti_type)
+    if not mbti_lower:
+        return False, f"Unknown MBTI type: {mbti_type}. Valid types: {', '.join(MBTI_TYPES)}"
 
+    summary = clean_summary(feedback_summary)
+    if not summary:
+        return False, "feedback_summary is empty"
+    if len(summary) > MAX_SUMMARY_CHARS:
+        return False, f"feedback_summary is too long ({len(summary)} characters). Summarize it in one sentence of at most {MAX_SUMMARY_CHARS} characters"
+
+    customized_file = MEMORY_DIR / f"customized-{mbti_lower}.md"
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    new_entry = f"- [{timestamp}] {feedback_summary}\n"
+    new_entry = f"- [{timestamp}] {summary}\n"
 
     try:
+        MEMORY_DIR.mkdir(parents=True, exist_ok=True)
         if not customized_file.exists():
-            # 文件不存在，创建并写入第一条反馈
-            content = get_customized_template(mbti_type, feedback_summary)
-            customized_file.write_text(content, encoding="utf-8")
+            # No file yet: create it with the first entry
+            content = get_customized_template(mbti_lower, summary)
         else:
-            # 文件存在，追加到 PERSONAL_ADJUSTMENTS_HEADER 部分
-            content = customized_file.read_text(encoding="utf-8")
+            content = _add_entry(customized_file.read_text(encoding="utf-8"), new_entry, summary)
+            if content is None:
+                return True, "This adjustment was already saved, so it was not added again"
+        customized_file.write_text(content, encoding="utf-8")
 
-            # 检查是否已有 PERSONAL_ADJUSTMENTS_HEADER 部分
-            if PERSONAL_ADJUSTMENTS_HEADER in content:
-                # 追加到最后一条反馈之后（而非 header 之后）
-                # 匹配形如 "- [2026-04-15 12:34] 反馈内容" 的行
-                last_entry_pattern = r"(-\s*\[[\d\s:-]+\][^\n]*\n)(?=\n|$)"
-                match = re.search(last_entry_pattern, content)
-                if match:
-                    # 插入到最后一条反馈之后
-                    insert_pos = match.end()
-                    content = content[:insert_pos] + new_entry + content[insert_pos:]
-                else:
-                    # 没有匹配到反馈条目，追加到 header 之后
-                    content = content.replace(
-                        f"{PERSONAL_ADJUSTMENTS_HEADER}\n",
-                        f"{PERSONAL_ADJUSTMENTS_HEADER}\n{new_entry}"
-                    )
-            else:
-                # 没有 PERSONAL_ADJUSTMENTS_HEADER，追加到文件末尾
-                content = content.rstrip() + f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{new_entry}"
-
-            customized_file.write_text(content, encoding="utf-8")
-
-        # 验证写入
+        # Read it back to check the write
         verified = customized_file.read_text(encoding="utf-8")
-        if new_entry.strip() in verified:
-            return True, "反馈已成功写入"
+        if summary in verified:
+            return True, "Feedback saved"
         else:
-            return False, "写入验证失败"
+            return False, "The feedback was written but could not be read back"
 
     except Exception as e:
-        return False, f"写入失败: {str(e)}"
+        return False, f"Could not save the feedback: {str(e)}"
 
 @server.list_prompts()
 async def list_prompts() -> list[Prompt]:
@@ -156,12 +190,15 @@ async def list_prompts() -> list[Prompt]:
 async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptResult:
     """当用户调用 /mbti-intj 时，读取并返回对应 prompt"""
     # 提取 MBTI 类型
-    mbti_type = name.replace("mbti-", "").upper()
+    mbti_lower = normalize_mbti_type(name.removeprefix("mbti-"))
+    if not mbti_lower:
+        raise ValueError(f"Unknown prompt: {name}. Available: {', '.join('mbti-' + t for t in MBTI_TYPES)}")
+    mbti_type = mbti_lower.upper()
 
     # 读取主 prompt
     skill_file = SKILLS_DIR / f"mbti-{mbti_type.lower()}.md"
     if not skill_file.exists():
-        raise FileNotFoundError(f"Skill file not found: {skill_file}")
+        raise FileNotFoundError(f"Skill file not found: skills/mbti-{mbti_lower}.md")
 
     content = skill_file.read_text(encoding="utf-8")
 
@@ -194,8 +231,7 @@ async def list_tools() -> list[Tool]:
                     "mbti_type": {
                         "type": "string",
                         "description": "当前 MBTI 类型（如 intj, entj, infp）",
-                        "enum": ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
-                                "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
+                        "enum": MBTI_TYPES
                     },
                     "feedback_summary": {
                         "type": "string",
@@ -209,21 +245,22 @@ async def list_tools() -> list[Tool]:
 
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """执行工具调用"""
+    """Run a tool call"""
     if name == "update_mbti_memory":
-        mbti_type = arguments.get("mbti_type", "").lower()
+        mbti_type = arguments.get("mbti_type", "")
         feedback_summary = arguments.get("feedback_summary", "")
 
         if not mbti_type or not feedback_summary:
-            return [TextContent(type="text", text="错误: mbti_type 和 feedback_summary 都是必填参数")]
+            return [TextContent(type="text", text="Error: mbti_type and feedback_summary are both required")]
 
         success, message = append_to_customized(mbti_type, feedback_summary)
         if success:
-            return [TextContent(type="text", text=f"✅ {message}\n\n文件路径: {MEMORY_DIR / f'customized-{mbti_type}.md'}")]
+            path = MEMORY_DIR / f"customized-{normalize_mbti_type(mbti_type)}.md"
+            return [TextContent(type="text", text=f"✅ {message}\n\nFile: {path}")]
         else:
             return [TextContent(type="text", text=f"❌ {message}")]
     else:
-        return [TextContent(type="text", text=f"未知工具: {name}")]
+        return [TextContent(type="text", text=f"Unknown tool: {name}")]
 
 if __name__ == "__main__":
     import mcp.server.stdio
