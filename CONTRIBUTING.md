@@ -15,6 +15,8 @@ python -m pytest tests -v
 MINDPERSONA_SERVER_CMD="uvx --from . mindpersona" python -m pytest tests/test_stdio_e2e.py
 ```
 
+CI (`.github/workflows/test.yml`) runs the tests on Python 3.10–3.14, against the oldest allowed mcp (1.3.0), and through `uvx` on Linux and macOS.
+
 `mcp` is pinned below 2: mcp 2.0 replaced the decorator API that `mindpersona/server.py` uses. Porting the server is welcome; lift the pin in `pyproject.toml` and `platform/claude/requirements.txt` in the same PR.
 
 Try your changes in Claude Code without installing:

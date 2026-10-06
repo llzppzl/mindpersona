@@ -1,4 +1,6 @@
 # MindPersona
+[![tests](https://github.com/llzppzl/mindpersona/actions/workflows/test.yml/badge.svg)](https://github.com/llzppzl/mindpersona/actions/workflows/test.yml)
+
 [English](./readme.md) | [中文](./README-zh.md)
 > Give your AI Agent a "personality" — stop settling for generic responses
 

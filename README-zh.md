@@ -1,4 +1,6 @@
 # MindPersona
+[![tests](https://github.com/llzppzl/mindpersona/actions/workflows/test.yml/badge.svg)](https://github.com/llzppzl/mindpersona/actions/workflows/test.yml)
+
 [English](./readme.md) | [中文](./README-zh.md)
 > 让 AI Agent 拥有"性格"，告别千篇一律的通用回答
 
