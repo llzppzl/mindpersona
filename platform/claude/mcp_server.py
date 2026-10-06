@@ -14,7 +14,22 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from mcp.server import Server
-from mcp.types import Prompt, GetPromptResult, Tool, CallToolResult, TextContent
+from mcp.types import Prompt, GetPromptResult, PromptMessage, Tool, CallToolResult, TextContent
+
+
+def require_mcp_1x(server_cls=Server):
+    """装的是 mcp 2.x 时，给出修复命令并退出，而不是在下面的装饰器处抛 AttributeError。
+
+    mcp 2.0 改为在 Server 构造函数里注册 handler，本文件用的是 1.x 的装饰器写法。
+    """
+    if not hasattr(server_cls, "list_prompts"):
+        raise SystemExit(
+            "MindPersona needs mcp 1.x, but a newer mcp is installed.\n"
+            "Fix: pip install 'mcp>=1.3,<2'"
+        )
+
+
+require_mcp_1x()
 
 # 服务配置
 SERVER_NAME = "mindpersona"
@@ -178,7 +193,7 @@ async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptRe
     trigger = TRIGGER_INSTRUCTION.format(mbti_type=mbti_type.lower())
     return GetPromptResult(
         description=f"MindPersona {mbti_type} 性格适配",
-        messages=[{"role": "user", "content": {"type": "text", "text": content + trigger}}]
+        messages=[PromptMessage(role="user", content=TextContent(type="text", text=content + trigger))]
     )
 
 @server.list_tools()
