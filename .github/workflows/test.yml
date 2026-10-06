@@ -16,7 +16,7 @@ jobs:
           - python: "3.11"
           - python: "3.12"
           - python: "3.13"
-          # 允许的最旧 mcp 版本
+          # The oldest allowed mcp
           - python: "3.10"
             mcp: "mcp==1.3.0"
     steps:

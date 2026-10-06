@@ -1,6 +1,6 @@
-"""用真实的 MCP client 通过 stdio 启动 server 并调用，和 Claude Code 的方式一样。
+"""Start the real server over stdio and talk to it with the MCP client, the way Claude Code does.
 
-只做读操作（列出/获取 prompt、列出工具），不会写入 memory/。
+Read-only (list and get prompts, list tools), so nothing is written to memory/.
 """
 import asyncio
 import sys
@@ -25,7 +25,7 @@ def run_session(scenario):
 
 
 def test_server_starts_and_serves_prompts_and_tools(tmp_path, monkeypatch):
-    monkeypatch.chdir(tmp_path)  # 不能依赖当前工作目录
+    monkeypatch.chdir(tmp_path)  # must not depend on the working directory
 
     async def scenario(session, init):
         prompts = (await session.list_prompts()).prompts
@@ -45,7 +45,7 @@ def test_mcp_2_gives_a_fix_instead_of_a_traceback():
     sys.path.insert(0, str(SERVER.parent))
     from mcp_server import require_mcp_1x
 
-    class Mcp2Server:  # mcp 2.x 的 Server 没有 list_prompts 装饰器
+    class Mcp2Server:  # mcp 2.x's Server has no list_prompts decorator
         pass
 
     with pytest.raises(SystemExit, match="mcp>=1.3,<2"):

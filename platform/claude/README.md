@@ -37,15 +37,15 @@ MindPersona MCP Server 允许你在 Claude Code 中使用 MBTI 性格适配 Prom
 
 3. 重启 Claude Code（或关闭当前窗口后重新打开）
 
-## 连不上怎么办
+## Troubleshooting
 
-`claude mcp list` 里 mindpersona 显示 `✘ Failed to connect` 时，先手动运行 `--` 后面的命令（`python 【mcp_server.py的绝对路径】`）看报错。正常情况下它不输出任何内容，一直等待输入，按 Ctrl+C 退出。
+If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the command after `--` yourself (`python /absolute/path/to/mcp_server.py`) to see the error. When it works, it prints nothing and waits for input. Press Ctrl+C to quit.
 
-| 报错 | 解决 |
-|------|------|
-| `MindPersona needs mcp 1.x` 或 `'Server' object has no attribute 'list_prompts'` | 环境里装的是 mcp 2.x，执行 `pip install 'mcp>=1.3,<2'`（或重新 `pip install -r requirements.txt`） |
-| Intel Mac 上 `Failed to build cryptography` | 重新 `pip install -r requirements.txt`，它会装带 Intel 安装包的 cryptography 版本 |
-| `No module named mcp` | `claude mcp add` 里用的 python 和装依赖的 python 不是同一个。用 `which python3` 得到的完整路径重新添加 |
+| Error | Fix |
+|-------|-----|
+| `MindPersona needs mcp 1.x` or `'Server' object has no attribute 'list_prompts'` | mcp 2.x is installed. Run `pip install 'mcp>=1.3,<2'` (or `pip install -r requirements.txt` again) |
+| `Failed to build cryptography` on an Intel Mac | Run `pip install -r requirements.txt` again. It installs a cryptography version that has Intel wheels |
+| `No module named mcp` | The python in `claude mcp add` is not the one you installed the dependencies with. Add the server again with the full path from `which python3` |
 
 ## 使用方式
 

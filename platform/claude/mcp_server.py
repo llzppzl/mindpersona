@@ -18,9 +18,9 @@ from mcp.types import Prompt, GetPromptResult, PromptMessage, Tool, CallToolResu
 
 
 def require_mcp_1x(server_cls=Server):
-    """装的是 mcp 2.x 时，给出修复命令并退出，而不是在下面的装饰器处抛 AttributeError。
+    """Exit with a fix instead of an AttributeError when mcp 2.x is installed.
 
-    mcp 2.0 改为在 Server 构造函数里注册 handler，本文件用的是 1.x 的装饰器写法。
+    mcp 2.0 registers handlers in the Server constructor; this file uses the 1.x decorators.
     """
     if not hasattr(server_cls, "list_prompts"):
         raise SystemExit(
