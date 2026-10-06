@@ -19,9 +19,10 @@ claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/
 | `用 ESTJ 帮我把这件事排成本周计划` | Claude 加载 ESTJ 人格（`load_persona` 工具），按它的风格回答 |
 | `这个任务适合哪个人格？我周五前要在两个 offer 里选一个` | Claude 按下方「任务索引」选一个类型，说明理由，然后加载 |
 | `/mcp__mindpersona__mbti-intj` | 用斜杠 prompt 加载 INTJ（在 `/` 菜单里显示为 `/mindpersona:mbti-intj (MCP)`） |
-| `太长了，别再用表格` | Claude 把这条写进你的私人档案，下次自动遵守 |
+| `太长了，别再用表格` | Claude 把这条存为该人格的第 1 条调整，告诉你，之后一直遵守 |
+| `你记得我的哪些偏好？` | Claude 列出已保存的调整。说 `删掉第 1 条` 就能删除 |
 
-反馈保存在 `~/.mindpersona/memory/customized-<类型>.md`。想放在别处，设置环境变量 `MINDPERSONA_MEMORY_DIR`。
+只有关于「怎么回答」的要求会被保存，抱怨代码或心情不好不会。调整保存在 `~/.mindpersona/memory/customized-<类型>.md`，一行一条。想放在别处，设置环境变量 `MINDPERSONA_MEMORY_DIR`。
 
 **固定一个人格（可选）。** 在命令最后加 `--persona <类型>`，之后每次会话都自动用这个人格回答，不用再说：
 
@@ -164,10 +165,10 @@ python -m pytest tests
 
 | 文件/目录 | 用途 |
 |-----------|------|
-| `CLAUDE.md` | 项目指令（AI 自动加载） |
+| `CLAUDE.md` | 用 Claude Code 开发 MindPersona 本身时的说明 |
 | `skills/mbti-*.md` | 通用 baseline（16种 MBTI） |
 | `memory/customized-*.md` | 从源码运行时的私人进化版（安装后在 `~/.mindpersona/memory/`；不上传 git） |
-| `mindpersona/server.py` | MCP Server：斜杠 prompt、`load_persona`、`update_mbti_memory` |
+| `mindpersona/server.py` | MCP Server：斜杠 prompt、`load_persona`，以及管理调整的工具（`update_mbti_memory`、`list_adjustments`、`remove_adjustment`） |
 | `tests/` | 测试（`python -m pytest tests`） |
 | `platform/` | 跨平台适配层 |
 | `platform/claude/` | Claude Code 安装说明、旧版 `mcp_server.py` 入口 |

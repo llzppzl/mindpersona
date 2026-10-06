@@ -33,6 +33,8 @@ Each persona is one file: `skills/mbti-<type>.md`. Keep this structure:
 
 Run the tests afterwards; `tests/test_load_persona.py` checks that every skill produces an index entry.
 
+Keep skills short. With `--persona`, the whole skill plus the user's adjustments is sent as server instructions, and Claude Code keeps only the first 2,048 characters. `tests/test_default_persona.py` fails if a persona leaves less than 500 characters for adjustments.
+
 ## Code style
 
 - Python 3.10+

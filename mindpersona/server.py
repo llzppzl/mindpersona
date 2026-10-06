@@ -60,26 +60,14 @@ SKILLS_DIR = find_skills_dir()
 MEMORY_DIR = find_memory_dir()
 PERSONAL_ADJUSTMENTS_HEADER = "## 你的私人调整"
 
+# Appended to every persona. Only requests about how to answer are saved: an adjustment loads in
+# every later session, so a saved complaint about the user's bug would follow them for good.
 TRIGGER_INSTRUCTION = """
 ---
 
-## 🔄 反馈触发机制（重要）
+## Feedback memory ({mbti_upper})
 
-当前用户的 MBTI 类型为：{mbti_type}
-
-**当用户表达任何形式的不满、抱怨、负面情绪、或要求改变交流方式时，你必须立即：**
-
-1. 向用户道歉并简短安抚
-2. 总结用户不满的核心诉求（一句话）
-3. **立即调用 `update_mbti_memory` 工具**，将：
-   - `mbti_type` 设置为当前人格类型（如 intj）
-   - `feedback_summary` 设置为你总结的核心诉求
-4. 工具调用成功后，明确告知用户："已更新到 {mbti_type} 的私人档案，后续会严格遵守"
-
-**注意：**
-- 用户语气冷淡、表示不满、要求改变 → 都是触发条件
-- feedback_summary 必须是总结后的一句话，不是原话复述
-- 即使 customized-{mbti_type}.md 不存在，工具会自动创建
+When the user asks you to change how you answer (tone, length, format, way of working), call update_mbti_memory with mbti_type "{mbti_type}" and their request as one short rule, then follow it. Don't save frustration with their own code, tools or day, or a request for the current task only. list_adjustments and remove_adjustment show and delete saved rules.
 """
 
 # 初始化 Server
@@ -158,9 +146,9 @@ def build_persona_prompt(mbti_type: str) -> str:
         match = re.search(rf"{PERSONAL_ADJUSTMENTS_HEADER}\s*\n(.*?)(?=<!-- 格式|$)", customized, re.DOTALL)
         if match:
             personal_adjustments = match.group(1).strip()
-            content += f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{personal_adjustments}"
+            content += f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{personal_adjustments}\n"
 
-    return content + TRIGGER_INSTRUCTION.format(mbti_type=mbti_lower)
+    return content + TRIGGER_INSTRUCTION.format(mbti_type=mbti_lower, mbti_upper=mbti_lower.upper())
 
 
 # Server instructions: Claude Code loads them into every session, even when tool search
@@ -170,7 +158,11 @@ INSTRUCTIONS_LIMIT = 2048
 USAGE_INSTRUCTIONS = """MindPersona adapts your replies to one of 16 MBTI personas ({types}).
 - When the user names a type ("Use INTJ to review this", "用 ESTJ 帮我排计划"), call load_persona with that type and follow the text it returns.
 - When the user asks which persona fits a task, pick a type from the task index in the load_persona description, say which one and why, then call load_persona.
+- When the user asks what you remember about how they like answers, or to forget some of it, use list_adjustments and remove_adjustment.
 - Answer in the language the user writes in."""
+
+# Set by main() from --persona
+DEFAULT_PERSONA: Optional[str] = None
 
 DEFAULT_PERSONA_HEADER = """MindPersona: the user chose {mbti_type} as their default persona. Follow the persona below in every reply. If they ask for another type, call load_persona and follow that one instead. Answer in the language the user writes in.
 
@@ -207,58 +199,109 @@ def get_customized_template(mbti_type: str, feedback_summary: str) -> str:
     )
     return result.replace("{HDR}", PERSONAL_ADJUSTMENTS_HEADER)
 
-def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, str]:
+def customized_path(mbti_type: str) -> Path:
+    return MEMORY_DIR / f"customized-{mbti_type.lower()}.md"
+
+
+def read_lines(mbti_type: str) -> list[str]:
+    path = customized_path(mbti_type)
+    return path.read_text(encoding="utf-8").splitlines() if path.exists() else []
+
+
+def adjustment_lines(lines: list[str]) -> list[int]:
+    """Indexes of the "- " lines under PERSONAL_ADJUSTMENTS_HEADER.
+
+    One line is one adjustment, and its position is the number list_adjustments shows,
+    so entries written by hand in another format count too.
     """
-    向 customized-{type}.md 追加反馈
-    Returns: (success: bool, message: str)
-    """
-    mbti_lower = mbti_type.lower()
-    customized_file = MEMORY_DIR / f"customized-{mbti_lower}.md"
+    stripped = [line.strip() for line in lines]
+    if PERSONAL_ADJUSTMENTS_HEADER not in stripped:
+        return []
+    found = []
+    for i in range(stripped.index(PERSONAL_ADJUSTMENTS_HEADER) + 1, len(lines)):
+        if stripped[i].startswith("<!-- 格式"):
+            break
+        if stripped[i].startswith("- "):
+            found.append(i)
+    return found
 
-    timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    new_entry = f"- [{timestamp}] {feedback_summary}\n"
 
-    try:
-        MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-        if not customized_file.exists():
-            # 文件不存在，创建并写入第一条反馈
-            content = get_customized_template(mbti_type, feedback_summary)
-            customized_file.write_text(content, encoding="utf-8")
-        else:
-            # 文件存在，追加到 PERSONAL_ADJUSTMENTS_HEADER 部分
-            content = customized_file.read_text(encoding="utf-8")
+def read_adjustments(mbti_type: str) -> list[str]:
+    """Saved adjustments, oldest first, without the "- " bullet."""
+    lines = read_lines(mbti_type)
+    return [lines[i].strip()[2:] for i in adjustment_lines(lines)]
 
-            # 检查是否已有 PERSONAL_ADJUSTMENTS_HEADER 部分
-            if PERSONAL_ADJUSTMENTS_HEADER in content:
-                # 追加到最后一条反馈之后（而非 header 之后）
-                # 匹配形如 "- [2026-04-15 12:34] 反馈内容" 的行
-                last_entry_pattern = r"(-\s*\[[\d\s:-]+\][^\n]*\n)(?=\n|$)"
-                match = re.search(last_entry_pattern, content)
-                if match:
-                    # 插入到最后一条反馈之后
-                    insert_pos = match.end()
-                    content = content[:insert_pos] + new_entry + content[insert_pos:]
-                else:
-                    # 没有匹配到反馈条目，追加到 header 之后
-                    content = content.replace(
-                        f"{PERSONAL_ADJUSTMENTS_HEADER}\n",
-                        f"{PERSONAL_ADJUSTMENTS_HEADER}\n{new_entry}"
-                    )
-            else:
-                # 没有 PERSONAL_ADJUSTMENTS_HEADER，追加到文件末尾
-                content = content.rstrip() + f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{new_entry}"
 
-            customized_file.write_text(content, encoding="utf-8")
+def one_line(text: str) -> str:
+    """A rule must stay on one line, or it would be read back as several adjustments."""
+    return " ".join(str(text or "").split())
 
-        # 验证写入
-        verified = customized_file.read_text(encoding="utf-8")
-        if new_entry.strip() in verified:
-            return True, "反馈已成功写入"
-        else:
-            return False, "写入验证失败"
 
-    except Exception as e:
-        return False, f"写入失败: {str(e)}"
+def without_timestamp(entry: str) -> str:
+    return re.sub(r"^\[[^\]]*\]\s*", "", entry)
+
+
+def save_adjustment(mbti_type: str, rule: str) -> tuple[int, bool]:
+    """Add one adjustment. Returns its number, and False if the same rule was already saved."""
+    rule = one_line(rule)
+    if not rule:
+        raise ValueError("feedback_summary is empty")
+    lines = read_lines(mbti_type)
+    entries = adjustment_lines(lines)
+    for number, i in enumerate(entries, 1):
+        if without_timestamp(lines[i].strip()[2:]).casefold() == rule.casefold():
+            return number, False
+
+    entry = f"- [{datetime.now():%Y-%m-%d %H:%M}] {rule}"
+    stripped = [line.strip() for line in lines]
+    if not lines:
+        lines = get_customized_template(mbti_type, rule).splitlines()
+    elif entries:
+        lines.insert(entries[-1] + 1, entry)
+    elif PERSONAL_ADJUSTMENTS_HEADER in stripped:
+        header = stripped.index(PERSONAL_ADJUSTMENTS_HEADER)
+        lines[header + 1:header + 1] = ["", entry]
+    else:
+        lines += ["", PERSONAL_ADJUSTMENTS_HEADER, "", entry]
+    MEMORY_DIR.mkdir(parents=True, exist_ok=True)
+    customized_path(mbti_type).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return len(entries) + 1, True
+
+
+def remove_adjustment(mbti_type: str, number: int) -> str:
+    """Delete adjustment `number` (counting from 1, as list_adjustments shows) and return it."""
+    lines = read_lines(mbti_type)
+    entries = adjustment_lines(lines)
+    if not 1 <= number <= len(entries):
+        raise ValueError(
+            f"{mbti_type.upper()} has {len(entries)} saved adjustments, so there is no #{number}. "
+            "Call list_adjustments to see them."
+        )
+    removed = lines.pop(entries[number - 1]).strip()[2:]
+    customized_path(mbti_type).write_text("\n".join(lines) + "\n", encoding="utf-8")
+    return removed
+
+
+def describe_adjustments(mbti_type: str) -> str:
+    entries = read_adjustments(mbti_type)
+    if not entries:
+        return f"No adjustments saved for {mbti_type.upper()}."
+    numbered = "\n".join(f"{number}. {entry}" for number, entry in enumerate(entries, 1))
+    return f"{mbti_type.upper()} adjustments ({customized_path(mbti_type)}):\n{numbered}"
+
+
+def limit_note(mbti_type: str) -> str:
+    """For the --persona default: say when its adjustments no longer fit in what Claude Code keeps."""
+    if mbti_type != DEFAULT_PERSONA:
+        return ""
+    size = len(build_instructions(mbti_type))
+    if size <= INSTRUCTIONS_LIMIT:
+        return ""
+    return (
+        f"\nNote: with --persona {mbti_type}, the instructions are now {size} characters and Claude Code keeps "
+        f"the first {INSTRUCTIONS_LIMIT}, so the newest adjustments won't load in new sessions. "
+        "Suggest removing ones the user no longer needs."
+    )
 
 @server.list_prompts()
 async def list_prompts() -> list[Prompt]:
@@ -310,47 +353,98 @@ async def list_tools() -> list[Tool]:
         ),
         Tool(
             name="update_mbti_memory",
-            description="当用户表达不满、抱怨或负面情绪时，将反馈追加到 customized-{mbti_type}.md。触发条件：用户语气不满、抱怨、要求改变交流方式。",
+            description=(
+                "Save how the user wants you to answer (tone, length, format, way of working) as an adjustment "
+                "to a persona. Adjustments load with the persona in every later session. Call it when the user "
+                "asks you to change how you answer. Don't call it for frustration with their own code, tools or "
+                "day, or for a request meant only for the current task."
+            ),
             inputSchema={
                 "type": "object",
                 "properties": {
                     "mbti_type": {
                         "type": "string",
-                        "description": "当前 MBTI 类型（如 intj, entj, infp）",
+                        "description": "The persona in use",
                         "enum": MBTI_TYPES
                     },
                     "feedback_summary": {
                         "type": "string",
-                        "description": "用户反馈的核心诉求摘要（已总结为一句话）"
+                        "description": "The request as one short rule, in the user's language, e.g. \"Lead with the conclusion\""
                     }
                 },
                 "required": ["mbti_type", "feedback_summary"]
             }
+        ),
+        Tool(
+            name="list_adjustments",
+            description=(
+                "Show the adjustments saved for a persona, numbered, with when each was saved. "
+                "Use it when the user asks what you remember about how they like answers."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {"mbti_type": {"type": "string", "enum": MBTI_TYPES}},
+                "required": ["mbti_type"]
+            }
+        ),
+        Tool(
+            name="remove_adjustment",
+            description=(
+                "Delete one saved adjustment by the number that list_adjustments or update_mbti_memory gave it. "
+                "Use it when the user says an adjustment is wrong or asks you to undo one. "
+                "Later adjustments move up one number, so remove the highest number first."
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "mbti_type": {"type": "string", "enum": MBTI_TYPES},
+                    "number": {"type": "integer", "minimum": 1}
+                },
+                "required": ["mbti_type", "number"]
+            }
         )
     ]
 
+
+def mbti_type_arg(arguments: dict) -> str:
+    mbti_type = str(arguments.get("mbti_type") or "").lower()
+    if mbti_type not in MBTI_TYPES:
+        raise ValueError(f"Unknown MBTI type {mbti_type!r}. Choose from: {', '.join(MBTI_TYPES)}")
+    return mbti_type
+
+
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """执行工具调用"""
+    """Run a tool. Errors are raised; the MCP SDK sends them to the client with isError set."""
     if name == "load_persona":
-        mbti_type = arguments.get("mbti_type", "").lower()
-        if mbti_type not in MBTI_TYPES:
-            return [TextContent(type="text", text=f"错误: 未知类型 {mbti_type!r}，可选: {', '.join(MBTI_TYPES)}")]
-        return [TextContent(type="text", text=build_persona_prompt(mbti_type))]
+        text = build_persona_prompt(mbti_type_arg(arguments))
     elif name == "update_mbti_memory":
-        mbti_type = arguments.get("mbti_type", "").lower()
-        feedback_summary = arguments.get("feedback_summary", "")
-
-        if not mbti_type or not feedback_summary:
-            return [TextContent(type="text", text="错误: mbti_type 和 feedback_summary 都是必填参数")]
-
-        success, message = append_to_customized(mbti_type, feedback_summary)
-        if success:
-            return [TextContent(type="text", text=f"✅ {message}\n\n文件路径: {MEMORY_DIR / f'customized-{mbti_type}.md'}")]
+        mbti_type = mbti_type_arg(arguments)
+        number, is_new = save_adjustment(mbti_type, arguments.get("feedback_summary"))
+        label = f"{mbti_type.upper()} adjustment #{number}"
+        if is_new:
+            text = (
+                f"Saved {label}: {one_line(arguments.get('feedback_summary'))}\n"
+                f"File: {customized_path(mbti_type)}\n"
+                f"Tell the user what you saved, and that they can ask you to undo it (remove_adjustment, number {number})."
+            )
         else:
-            return [TextContent(type="text", text=f"❌ {message}")]
+            text = f"This is already saved as {label}. Nothing changed."
+        text += limit_note(mbti_type)
+    elif name == "list_adjustments":
+        mbti_type = mbti_type_arg(arguments)
+        text = describe_adjustments(mbti_type) + limit_note(mbti_type)
+    elif name == "remove_adjustment":
+        mbti_type = mbti_type_arg(arguments)
+        try:
+            number = int(arguments.get("number"))
+        except (TypeError, ValueError):
+            raise ValueError("number must be an adjustment number from list_adjustments, e.g. 2") from None
+        removed = remove_adjustment(mbti_type, number)
+        text = f"Removed {mbti_type.upper()} adjustment #{number}: {removed}\n\n{describe_adjustments(mbti_type)}"
     else:
-        return [TextContent(type="text", text=f"未知工具: {name}")]
+        raise ValueError(f"Unknown tool: {name}")
+    return [TextContent(type="text", text=text)]
 
 def parse_args(argv=None):
     import argparse
@@ -386,7 +480,9 @@ def main(argv=None):
     import asyncio
     import mcp.server.stdio
 
+    global DEFAULT_PERSONA
     args = parse_args(argv)
+    DEFAULT_PERSONA = args.persona
     server.instructions = build_instructions(args.persona)
     warn_if_truncated(server.instructions, args.persona)
 

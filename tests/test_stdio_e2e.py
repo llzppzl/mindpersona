@@ -56,26 +56,38 @@ def test_server_starts_and_serves_prompts_and_tools(tmp_path, monkeypatch):
     assert "load_persona" in init.instructions
     assert len([p for p in prompts if p.name.startswith("mbti-")]) == 16
     assert intj.messages[0].content.text.startswith("# INTJ")
-    assert {"load_persona", "update_mbti_memory"} <= {t.name for t in tools}
+    assert {"load_persona", "update_mbti_memory", "list_adjustments", "remove_adjustment"} <= {t.name for t in tools}
     assert text_of(estj).startswith("# ESTJ")
 
 
-def test_feedback_is_saved_and_loaded_next_time(tmp_path):
+def test_feedback_is_saved_listed_removed_and_loaded_next_time(tmp_path):
     memory_dir = tmp_path / "memory"
 
     async def save(session, init):
-        return await session.call_tool(
+        first = await session.call_tool(
             "update_mbti_memory", {"mbti_type": "intj", "feedback_summary": "Skip the preamble"}
         )
+        await session.call_tool("update_mbti_memory", {"mbti_type": "intj", "feedback_summary": "No emoji"})
+        return first
 
-    async def load(session, init):
-        return await session.call_tool("load_persona", {"mbti_type": "intj"})
+    async def review(session, init):
+        listed = await session.call_tool("list_adjustments", {"mbti_type": "intj"})
+        removed = await session.call_tool("remove_adjustment", {"mbti_type": "intj", "number": 2})
+        missing = await session.call_tool("remove_adjustment", {"mbti_type": "intj", "number": 9})
+        loaded = await session.call_tool("load_persona", {"mbti_type": "intj"})
+        return listed, removed, missing, loaded
 
     saved = run_session(memory_dir, save)
     assert not saved.isError
+    assert text_of(saved).startswith("Saved INTJ adjustment #1: Skip the preamble")
     assert (memory_dir / "customized-intj.md").is_file()
 
-    assert "Skip the preamble" in text_of(run_session(memory_dir, load))
+    listed, removed, missing, loaded = run_session(memory_dir, review)
+    assert "1. [" in text_of(listed) and "] No emoji" in text_of(listed)
+    assert not removed.isError
+    assert missing.isError and "no #9" in text_of(missing)
+    assert "Skip the preamble" in text_of(loaded)
+    assert "No emoji" not in text_of(loaded)
 
 
 def test_default_persona_is_sent_as_server_instructions(tmp_path):

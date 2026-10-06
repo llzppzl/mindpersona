@@ -50,15 +50,14 @@ def test_load_persona_returns_skill_and_feedback_instructions(tmp_path, monkeypa
 
 def test_load_persona_includes_personal_adjustments(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "MEMORY_DIR", tmp_path)
-    server.append_to_customized("estj", "不要用表格")
+    server.save_adjustment("estj", "不要用表格")
 
     assert "不要用表格" in call("load_persona", {"mbti_type": "estj"})
 
 
 def test_load_persona_rejects_unknown_type():
-    text = call("load_persona", {"mbti_type": "abcd"})
-    assert text.startswith("错误")
-    assert "estj" in text
+    with pytest.raises(ValueError, match="Choose from: intj"):
+        call("load_persona", {"mbti_type": "abcd"})
 
 
 def test_prompt_and_tool_return_the_same_text(tmp_path, monkeypatch):

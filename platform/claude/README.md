@@ -20,9 +20,10 @@ Without uv: `pip install git+https://github.com/llzppzl/mindpersona`, then `clau
 
 - Just ask: `Use INTJ to review this plan`, or `Which persona fits this task?`. Claude calls the `load_persona` tool.
 - Slash prompts: `/mcp__mindpersona__mbti-intj`, `/mcp__mindpersona__mbti-infp`, and so on for all 16 types. The `/` menu lists them as `/mindpersona:mbti-intj (MCP)`.
-- Complain when the style is off (`too long`, `stop hedging`). Claude calls `update_mbti_memory`, and the rule is applied every time you load that type again.
+- Say when the style is off (`too long`, `stop hedging`). Claude saves the request as a numbered adjustment (`update_mbti_memory`), tells you the number, and applies it every time that type loads. Frustration with your own code or tools is not saved.
+- Ask `What do you remember about how I like answers?` to see the adjustments (`list_adjustments`). Say `Forget number 2` or `Undo that` to delete one (`remove_adjustment`).
 
-Feedback is stored in `~/.mindpersona/memory/customized-<type>.md`. Set `MINDPERSONA_MEMORY_DIR` to change the location.
+Adjustments are stored one per line in `~/.mindpersona/memory/customized-<type>.md`, which you can also edit by hand. Set `MINDPERSONA_MEMORY_DIR` to change the location.
 
 ## Default persona
 
@@ -36,7 +37,7 @@ Setting `MINDPERSONA_PERSONA=intj` in the server's environment does the same.
 
 The server sends the persona and your saved adjustments as its MCP server instructions, which Claude Code loads at the start of every session. They are part of the system prompt, so they don't scroll out of a long conversation the way a loaded prompt can. A one-off `Use ENFP to brainstorm this` still switches for that task.
 
-Claude Code keeps the first 2,048 characters of a server's instructions. The instructions for one persona are 1,000–1,250 characters, which leaves room for roughly 15 one-line adjustments. Past that, the server prints a warning to stderr when it starts; shorten your `customized-<type>.md` or set `CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH`.
+Claude Code keeps the first 2,048 characters of a server's instructions. The instructions for one persona are 1,000–1,250 characters, which leaves room for roughly 15 one-line adjustments. Past that, Claude tells you when it saves or lists adjustments, and the server prints a warning to stderr when it starts. Delete some (`Forget number 3`) or set `CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH`.
 
 To change the default, remove the server (`claude mcp remove mindpersona -s user`) and add it again.
 
@@ -74,7 +75,9 @@ When run from a clone, feedback stays in the repo's `memory/` folder. When insta
 | server instructions | sent when Claude Code connects | Without `--persona`: when to call the tools. With `--persona`: the full persona, in every session |
 | `mbti-<type>` | prompt | Persona text, your personal adjustments, feedback instructions |
 | `load_persona` | tool | Same text as the prompt; its description includes the task index so Claude can recommend a type |
-| `update_mbti_memory` | tool | Appends one-line feedback to `customized-<type>.md` |
+| `update_mbti_memory` | tool | Saves a request about how to answer as one line in `customized-<type>.md` and returns its number |
+| `list_adjustments` | tool | Numbered list of the saved adjustments for a type |
+| `remove_adjustment` | tool | Deletes one adjustment by number |
 
 ---
 

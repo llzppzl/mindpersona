@@ -16,7 +16,7 @@ def test_without_default_instructions_explain_the_tools():
 
 def test_default_persona_instructions_contain_persona_and_adjustments(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "MEMORY_DIR", tmp_path)
-    server.append_to_customized("intj", "Skip the preamble")
+    server.save_adjustment("intj", "Skip the preamble")
 
     text = server.build_instructions("intj")
 

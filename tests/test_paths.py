@@ -37,7 +37,6 @@ def test_installed_package_keeps_memory_in_home(tmp_path, monkeypatch):
 def test_memory_dir_is_created_on_first_feedback(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "MEMORY_DIR", tmp_path / "not-yet" / "memory")
 
-    ok, _ = server.append_to_customized("intj", "少说废话")
+    server.save_adjustment("intj", "少说废话")
 
-    assert ok
     assert (tmp_path / "not-yet" / "memory" / "customized-intj.md").is_file()

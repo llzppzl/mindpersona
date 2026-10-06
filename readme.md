@@ -19,9 +19,10 @@ Restart Claude Code. Then, in **any** project:
 | `Use ESTJ to turn this into a plan for this week` | Claude loads the ESTJ persona (`load_persona` tool) and answers in that style |
 | `Which persona fits this? I must choose between two offers by Friday` | Claude picks a type from the Task Index below, tells you why, and loads it |
 | `/mcp__mindpersona__mbti-intj` | Loads INTJ as a slash prompt (in the `/` menu it is listed as `/mindpersona:mbti-intj (MCP)`) |
-| `Too long. Stop using tables.` | Claude saves this to your personal file and follows it next time |
+| `Too long. Stop using tables.` | Claude saves this as adjustment #1 to the persona, tells you, and follows it from then on |
+| `What do you remember about how I like answers?` | Claude lists your saved adjustments. `Forget number 1` deletes one |
 
-Your feedback is stored in `~/.mindpersona/memory/customized-<type>.md`. Set `MINDPERSONA_MEMORY_DIR` to keep it somewhere else.
+Only requests about how Claude answers are saved, not frustration with your code or your day. Adjustments are stored one per line in `~/.mindpersona/memory/customized-<type>.md`. Set `MINDPERSONA_MEMORY_DIR` to keep them somewhere else.
 
 **One persona for everything (optional).** Add `--persona <type>` at the end, and every session answers in that persona without being asked:
 
@@ -156,10 +157,10 @@ Diagnose MBTI → Configure interaction format & tone (S/N + T/F)
 
 | File/Directory | Purpose |
 |---------------|---------|
-| `CLAUDE.md` | Project instructions (auto-loaded by AI) |
+| `CLAUDE.md` | Notes for working on MindPersona itself with Claude Code |
 | `skills/mbti-*.md` | Universal baseline (16 MBTI types) |
 | `memory/customized-*.md` | Your personal evolution when running from source (installed: `~/.mindpersona/memory/`; never committed) |
-| `mindpersona/server.py` | MCP server: slash prompts, `load_persona`, `update_mbti_memory` |
+| `mindpersona/server.py` | MCP server: slash prompts, `load_persona`, and the adjustment tools (`update_mbti_memory`, `list_adjustments`, `remove_adjustment`) |
 | `tests/` | Tests (`python -m pytest tests`) |
 | `platform/` | Cross-platform adaptation layer |
 | `platform/claude/` | Claude Code install guide and legacy `mcp_server.py` entry |
