@@ -9,6 +9,7 @@ MindPersona MCP Server
 
 import os
 import re
+import sys
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -160,6 +161,28 @@ def build_persona_prompt(mbti_type: str) -> str:
             content += f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{personal_adjustments}"
 
     return content + TRIGGER_INSTRUCTION.format(mbti_type=mbti_lower)
+
+
+# Server instructions: Claude Code loads them into every session, even when tool search
+# defers the tool descriptions, and keeps the first 2,048 characters.
+INSTRUCTIONS_LIMIT = 2048
+
+USAGE_INSTRUCTIONS = """MindPersona adapts your replies to one of 16 MBTI personas ({types}).
+- When the user names a type ("Use INTJ to review this", "用 ESTJ 帮我排计划"), call load_persona with that type and follow the text it returns.
+- When the user asks which persona fits a task, pick a type from the task index in the load_persona description, say which one and why, then call load_persona.
+- Answer in the language the user writes in."""
+
+DEFAULT_PERSONA_HEADER = """MindPersona: the user chose {mbti_type} as their default persona. Follow the persona below in every reply. If they ask for another type, call load_persona and follow that one instead. Answer in the language the user writes in.
+
+"""
+
+
+def build_instructions(default_persona: Optional[str] = None) -> str:
+    """Without a default: when to call the tools. With one: the whole persona, applied to every reply."""
+    if not default_persona:
+        return USAGE_INSTRUCTIONS.format(types=", ".join(MBTI_TYPES))
+    header = DEFAULT_PERSONA_HEADER.format(mbti_type=default_persona.upper())
+    return header + build_persona_prompt(default_persona)
 
 CUSTOMIZED_TEMPLATE = """# {mbti_type} 进化版 - 你的私人部分
 
@@ -329,10 +352,43 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     else:
         return [TextContent(type="text", text=f"未知工具: {name}")]
 
-def main():
+def parse_args(argv=None):
+    import argparse
+
+    parser = argparse.ArgumentParser(
+        prog="mindpersona",
+        description="MindPersona MCP server. Claude Code starts it over stdio; see platform/claude/README.md.",
+    )
+    parser.add_argument(
+        "--persona", metavar="TYPE", type=str.lower,
+        default=(os.environ.get("MINDPERSONA_PERSONA") or "").lower() or None,
+        help="apply this persona to every reply, e.g. intj (env: MINDPERSONA_PERSONA)",
+    )
+    args = parser.parse_args(argv)
+    if args.persona and args.persona not in MBTI_TYPES:
+        parser.error(f"unknown persona {args.persona!r}; choose from: {', '.join(MBTI_TYPES)}")
+    return args
+
+
+def warn_if_truncated(instructions: str, persona: Optional[str]) -> None:
+    """Saved adjustments grow over time; say so before Claude Code silently cuts the end off."""
+    if len(instructions) > INSTRUCTIONS_LIMIT:
+        print(
+            f"mindpersona: the instructions are {len(instructions)} characters, but Claude Code keeps only "
+            f"the first {INSTRUCTIONS_LIMIT}. Shorten {MEMORY_DIR / f'customized-{persona}.md'} "
+            "or set CLAUDE_CODE_MAX_MCP_DESCRIPTION_LENGTH.",
+            file=sys.stderr,
+        )
+
+
+def main(argv=None):
     """命令行入口（pyproject.toml 中的 mindpersona 命令）"""
     import asyncio
     import mcp.server.stdio
+
+    args = parse_args(argv)
+    server.instructions = build_instructions(args.persona)
+    warn_if_truncated(server.instructions, args.persona)
 
     async def run():
         async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):

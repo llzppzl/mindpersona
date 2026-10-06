@@ -18,10 +18,18 @@ Restart Claude Code. Then, in **any** project:
 |----------|--------------|
 | `Use ESTJ to turn this into a plan for this week` | Claude loads the ESTJ persona (`load_persona` tool) and answers in that style |
 | `Which persona fits this? I must choose between two offers by Friday` | Claude picks a type from the Task Index below, tells you why, and loads it |
-| `/mcp__mindpersona__mbti-intj` | Loads INTJ as a slash prompt (Claude Code names MCP prompts `/mcp__<server>__<prompt>`) |
+| `/mcp__mindpersona__mbti-intj` | Loads INTJ as a slash prompt (in the `/` menu it is listed as `/mindpersona:mbti-intj (MCP)`) |
 | `Too long. Stop using tables.` | Claude saves this to your personal file and follows it next time |
 
 Your feedback is stored in `~/.mindpersona/memory/customized-<type>.md`. Set `MINDPERSONA_MEMORY_DIR` to keep it somewhere else.
+
+**One persona for everything (optional).** Add `--persona <type>` at the end, and every session answers in that persona without being asked:
+
+```bash
+claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/mindpersona mindpersona --persona intj
+```
+
+You can still switch for one task (`Use ENFP to brainstorm this`). To change the default, run `claude mcp remove mindpersona -s user` and add it again with another type.
 
 Without uv:
 

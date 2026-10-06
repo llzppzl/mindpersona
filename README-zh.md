@@ -18,10 +18,18 @@ claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/
 |--------|-----------|
 | `用 ESTJ 帮我把这件事排成本周计划` | Claude 加载 ESTJ 人格（`load_persona` 工具），按它的风格回答 |
 | `这个任务适合哪个人格？我周五前要在两个 offer 里选一个` | Claude 按下方「任务索引」选一个类型，说明理由，然后加载 |
-| `/mcp__mindpersona__mbti-intj` | 用斜杠 prompt 加载 INTJ（Claude Code 中 MCP prompt 的名字是 `/mcp__<server>__<prompt>`） |
+| `/mcp__mindpersona__mbti-intj` | 用斜杠 prompt 加载 INTJ（在 `/` 菜单里显示为 `/mindpersona:mbti-intj (MCP)`） |
 | `太长了，别再用表格` | Claude 把这条写进你的私人档案，下次自动遵守 |
 
 反馈保存在 `~/.mindpersona/memory/customized-<类型>.md`。想放在别处，设置环境变量 `MINDPERSONA_MEMORY_DIR`。
+
+**固定一个人格（可选）。** 在命令最后加 `--persona <类型>`，之后每次会话都自动用这个人格回答，不用再说：
+
+```bash
+claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/mindpersona mindpersona --persona intj
+```
+
+单个任务仍然可以临时换（`用 ENFP 帮我发散一下`）。想换默认人格：先运行 `claude mcp remove mindpersona -s user`，再用新类型重新添加。
 
 不用 uv：
 

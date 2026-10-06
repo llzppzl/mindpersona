@@ -15,19 +15,20 @@ from mcp.client.stdio import stdio_client
 REPO_DIR = Path(__file__).resolve().parent.parent
 
 
-def server_params(memory_dir):
+def server_params(memory_dir, server_args):
     env = {**os.environ, "MINDPERSONA_MEMORY_DIR": str(memory_dir)}
+    env.pop("MINDPERSONA_PERSONA", None)
     if os.environ.get("MINDPERSONA_SERVER_CMD"):
         command, *args = shlex.split(os.environ["MINDPERSONA_SERVER_CMD"])
     else:
         command, args = sys.executable, ["-m", "mindpersona.server"]
         env["PYTHONPATH"] = os.pathsep.join(filter(None, [str(REPO_DIR), env.get("PYTHONPATH")]))
-    return StdioServerParameters(command=command, args=args, env=env)
+    return StdioServerParameters(command=command, args=[*args, *server_args], env=env)
 
 
-def run_session(memory_dir, scenario):
+def run_session(memory_dir, scenario, *server_args):
     async def main():
-        async with stdio_client(server_params(memory_dir)) as (read, write):
+        async with stdio_client(server_params(memory_dir, server_args)) as (read, write):
             async with ClientSession(read, write) as session:
                 init = await session.initialize()
                 return await scenario(session, init)
@@ -52,6 +53,7 @@ def test_server_starts_and_serves_prompts_and_tools(tmp_path, monkeypatch):
     init, prompts, intj, tools, estj = run_session(tmp_path / "memory", scenario)
 
     assert init.serverInfo.name == "mindpersona"
+    assert "load_persona" in init.instructions
     assert len([p for p in prompts if p.name.startswith("mbti-")]) == 16
     assert intj.messages[0].content.text.startswith("# INTJ")
     assert {"load_persona", "update_mbti_memory"} <= {t.name for t in tools}
@@ -74,3 +76,13 @@ def test_feedback_is_saved_and_loaded_next_time(tmp_path):
     assert (memory_dir / "customized-intj.md").is_file()
 
     assert "Skip the preamble" in text_of(run_session(memory_dir, load))
+
+
+def test_default_persona_is_sent_as_server_instructions(tmp_path):
+    async def scenario(session, init):
+        return init
+
+    init = run_session(tmp_path / "memory", scenario, "--persona", "intj")
+
+    assert init.instructions.startswith("MindPersona: the user chose INTJ")
+    assert "# INTJ - 冷酷幕僚长" in init.instructions
