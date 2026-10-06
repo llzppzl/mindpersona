@@ -37,6 +37,16 @@ MindPersona MCP Server 允许你在 Claude Code 中使用 MBTI 性格适配 Prom
 
 3. 重启 Claude Code（或关闭当前窗口后重新打开）
 
+## Troubleshooting
+
+If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the command after `--` yourself (`python /absolute/path/to/mcp_server.py`) to see the error. When it works, it prints nothing and waits for input. Press Ctrl+C to quit.
+
+| Error | Fix |
+|-------|-----|
+| `MindPersona needs mcp 1.x` or `'Server' object has no attribute 'list_prompts'` | mcp 2.x is installed. Run `pip install 'mcp>=1.3,<2'` (or `pip install -r requirements.txt` again) |
+| `Failed to build cryptography` on an Intel Mac | Run `pip install -r requirements.txt` again. It installs a cryptography version that has Intel wheels |
+| `No module named mcp` | The python in `claude mcp add` is not the one you installed the dependencies with. Add the server again with the full path from `which python3` |
+
 ## 使用方式
 
 在 Claude 输入框中：
