@@ -9,6 +9,14 @@ pip install -e .          # Python 3.10+
 python -m pytest tests -v
 ```
 
+`tests/test_stdio_e2e.py` starts the server as a subprocess and talks to it with the MCP client, like Claude Code does. To run it against an installed command instead of this checkout:
+
+```bash
+MINDPERSONA_SERVER_CMD="uvx --from . mindpersona" python -m pytest tests/test_stdio_e2e.py
+```
+
+`mcp` is pinned below 2: mcp 2.0 replaced the decorator API that `mindpersona/server.py` uses. Porting the server is welcome; lift the pin in `pyproject.toml` and `platform/claude/requirements.txt` in the same PR.
+
 Try your changes in Claude Code without installing:
 
 ```bash

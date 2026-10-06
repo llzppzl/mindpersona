@@ -30,6 +30,16 @@ pip install git+https://github.com/llzppzl/mindpersona
 claude mcp add mindpersona -s user -- mindpersona
 ```
 
+#### 连不上怎么办
+
+`claude mcp list` 里 mindpersona 显示 `✘ Failed to connect` 时，先手动运行上面 `--` 后面的命令（`uvx --from git+https://github.com/llzppzl/mindpersona mindpersona`）看报错。正常情况下它不输出任何内容，一直等待输入，按 Ctrl+C 退出。
+
+| 报错 | 解决 |
+|------|------|
+| `uvx: command not found` | 先装 [uv](https://docs.astral.sh/uv/getting-started/installation/)。装好后 Claude Code 仍然找不到时，用完整路径重新添加：`claude mcp add mindpersona -s user -- "$(which uvx)" --from git+https://github.com/llzppzl/mindpersona mindpersona` |
+| Intel Mac 上 `Failed to build cryptography` | 当前版本已修复，重启 Claude Code 即可（uvx 每次启动都会取最新提交）|
+| `MindPersona needs mcp 1.x` 或 `'Server' object has no attribute 'list_prompts'` | 环境里装的是 mcp 2.x。从源码运行时执行 `pip install 'mcp>=1.3,<2'` |
+
 ### 任何聊天应用（免安装）
 
 打开 [`skills/`](./skills) 里的文件，例如 [`skills/mbti-intj.md`](./skills/mbti-intj.md)，粘贴到 ChatGPT 自定义指令、Claude Project 或你的 system prompt 里。

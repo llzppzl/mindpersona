@@ -13,7 +13,22 @@ from datetime import datetime
 from pathlib import Path
 from typing import Optional
 from mcp.server import Server
-from mcp.types import Prompt, GetPromptResult, Tool, CallToolResult, TextContent
+from mcp.types import Prompt, GetPromptResult, PromptMessage, Tool, CallToolResult, TextContent
+
+
+def require_mcp_1x(server_cls=Server):
+    """Exit with a fix instead of an AttributeError when mcp 2.x is installed.
+
+    mcp 2.0 registers handlers in the Server constructor; this file uses the 1.x decorators.
+    """
+    if not hasattr(server_cls, "list_prompts"):
+        raise SystemExit(
+            "MindPersona needs mcp 1.x, but a newer mcp is installed.\n"
+            "Fix: pip install 'mcp>=1.3,<2'"
+        )
+
+
+require_mcp_1x()
 
 # 服务配置
 SERVER_NAME = "mindpersona"
@@ -243,7 +258,7 @@ async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptRe
     mbti_type = name.replace("mbti-", "").upper()
     return GetPromptResult(
         description=f"MindPersona {mbti_type} 性格适配",
-        messages=[{"role": "user", "content": {"type": "text", "text": build_persona_prompt(mbti_type)}}]
+        messages=[PromptMessage(role="user", content=TextContent(type="text", text=build_persona_prompt(mbti_type)))]
     )
 
 @server.list_tools()

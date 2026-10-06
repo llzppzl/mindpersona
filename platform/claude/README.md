@@ -24,6 +24,22 @@ Without uv: `pip install git+https://github.com/llzppzl/mindpersona`, then `clau
 
 Feedback is stored in `~/.mindpersona/memory/customized-<type>.md`. Set `MINDPERSONA_MEMORY_DIR` to change the location.
 
+## Troubleshooting
+
+If `claude mcp list` shows `✘ Failed to connect` for `mindpersona`, run the command after `--` yourself to see the error:
+
+```bash
+uvx --from git+https://github.com/llzppzl/mindpersona mindpersona
+```
+
+When it works, it prints nothing and waits for input. Press Ctrl+C to quit.
+
+| Error | Fix |
+|-------|-----|
+| `uvx: command not found` | Install [uv](https://docs.astral.sh/uv/getting-started/installation/). If Claude Code still can't find it, add the server with the full path: `claude mcp add mindpersona -s user -- "$(which uvx)" --from git+https://github.com/llzppzl/mindpersona mindpersona` |
+| `Failed to build cryptography` on an Intel Mac | Fixed in the current version. Restart Claude Code; uvx fetches the latest commit each time it starts the server |
+| `MindPersona needs mcp 1.x` or `'Server' object has no attribute 'list_prompts'` | mcp 2.x is installed. If you run from source: `pip install 'mcp>=1.3,<2'` |
+
 ## Upgrading from the old setup
 
 If you added the server with `python /path/to/platform/claude/mcp_server.py`, that still works. To switch:

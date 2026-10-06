@@ -30,6 +30,8 @@ pip install git+https://github.com/llzppzl/mindpersona
 claude mcp add mindpersona -s user -- mindpersona
 ```
 
+`claude mcp list` shows `✘ Failed to connect`? See [Troubleshooting](./platform/claude/README.md#troubleshooting).
+
 ### Any chat app (no install)
 
 Open a file in [`skills/`](./skills), for example [`skills/mbti-intj.md`](./skills/mbti-intj.md), and paste it into ChatGPT custom instructions, a Claude Project, or your system prompt. The skills are written in Chinese; the model will still answer in your language.

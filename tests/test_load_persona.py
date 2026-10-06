@@ -3,6 +3,8 @@ import asyncio
 import sys
 from pathlib import Path
 
+import pytest
+
 sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 from mindpersona import server
 
@@ -62,9 +64,17 @@ def test_load_persona_rejects_unknown_type():
 def test_prompt_and_tool_return_the_same_text(tmp_path, monkeypatch):
     monkeypatch.setattr(server, "MEMORY_DIR", tmp_path)
     prompt = asyncio.run(server.get_prompt("mbti-intj"))
-    assert prompt.messages[0]["content"]["text"] == call("load_persona", {"mbti_type": "intj"})
+    assert prompt.messages[0].content.text == call("load_persona", {"mbti_type": "intj"})
 
 
 def test_prompt_descriptions_show_what_each_type_is_for():
     prompts = {p.name: p.description for p in asyncio.run(server.list_prompts())}
     assert "选项分析" in prompts["mbti-intj"]
+
+
+def test_mcp_2_gets_a_clear_error_instead_of_a_crash():
+    class Mcp2Server:  # mcp 2.x Server: no decorator methods
+        pass
+
+    with pytest.raises(SystemExit, match="mcp>=1.3,<2"):
+        server.require_mcp_1x(Mcp2Server)
