@@ -1,11 +1,11 @@
 """
 MindPersona MCP Server
-为 Claude Code 提供 MBTI 性格适配 prompt
+Serves the MBTI persona prompts to Claude Code.
 
-使用方法：
+Usage:
 1. pip install -r requirements.txt
-2. 配置 MCP Server（见 README.md）
-3. 重启 Claude Code
+2. Add the MCP server (see README.md)
+3. Restart Claude Code
 """
 
 import os
@@ -25,35 +25,34 @@ PERSONAL_ADJUSTMENTS_HEADER = "## 你的私人调整"
 TRIGGER_INSTRUCTION = """
 ---
 
-## 🔄 反馈触发机制（重要）
+## Saving feedback (important)
 
-当前用户的 MBTI 类型为：{mbti_type}
+The current MBTI persona is: {mbti_type}
 
-**当用户表达任何形式的不满、抱怨、负面情绪、或要求改变交流方式时，你必须立即：**
+When the user asks for a lasting change in how you answer them (tone, length, format, level of detail, way of working), for example "too long", "stop apologizing", "use tables", "be gentler":
 
-1. 向用户道歉并简短安抚
-2. 总结用户不满的核心诉求（一句话）
-3. **立即调用 `update_mbti_memory` 工具**，将：
-   - `mbti_type` 设置为当前人格类型（如 intj）
-   - `feedback_summary` 设置为你总结的核心诉求
-4. 工具调用成功后，明确告知用户："已更新到 {mbti_type} 的私人档案，后续会严格遵守"
+1. Summarize what they want in one sentence, in your own words (not a quote).
+2. Call the `update_mbti_memory` tool with `mbti_type` = "{mbti_type}" and `feedback_summary` = that sentence.
+3. When it succeeds, tell the user, in the language they write in, that you saved it for this persona and will follow it from now on.
 
-**注意：**
-- 用户语气冷淡、表示不满、要求改变 → 都是触发条件
-- feedback_summary 必须是总结后的一句话，不是原话复述
-- 即使 customized-{mbti_type}.md 不存在，工具会自动创建
+Don't save:
+- frustration with their own code, tools or day ("this build keeps failing"): help with the problem instead;
+- a request that is only about the current answer or task ("shorter this time");
+- something the persona above already says.
+
+If you can't tell whether they want it remembered, ask. The tool creates customized-{mbti_type}.md if it doesn't exist yet.
 """
 
-# 初始化 Server
+# The MCP server
 server = Server(SERVER_NAME)
 
 def get_mbti_type_from_filename(filename: str) -> Optional[str]:
-    """从文件名提取 MBTI 类型，如 mbti-intj.md -> intj"""
+    """The MBTI type in a skill file name, e.g. mbti-intj.md -> INTJ"""
     match = re.match(r"mbti-([a-z]{4})\.md$", filename, re.IGNORECASE)
     return match.group(1).upper() if match else None
 
 def scan_skills() -> list[dict]:
-    """扫描 skills/ 目录，返回所有 MBTI prompt 列表"""
+    """List the MBTI prompts in skills/"""
     prompts = []
     for filepath in sorted(SKILLS_DIR.glob("mbti-*.md")):
         mbti_type = get_mbti_type_from_filename(filepath.name)
@@ -61,7 +60,7 @@ def scan_skills() -> list[dict]:
             prompts.append({
                 "type": mbti_type,
                 "filepath": filepath,
-                "description": f"MindPersona {mbti_type} 性格适配"
+                "description": f"MindPersona {mbti_type} persona"
             })
     return prompts
 
@@ -142,7 +141,7 @@ def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, s
 
 @server.list_prompts()
 async def list_prompts() -> list[Prompt]:
-    """列出所有可用 prompt（用户输入 /mbti-intj 时显示）"""
+    """List the prompts (shown when the user types /mbti-intj)"""
     prompts = scan_skills()
     return [
         Prompt(
@@ -183,11 +182,14 @@ async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptRe
 
 @server.list_tools()
 async def list_tools() -> list[Tool]:
-    """列出所有可用工具"""
+    """List the tools"""
     return [
         Tool(
             name="update_mbti_memory",
-            description="当用户表达不满、抱怨或负面情绪时，将反馈追加到 customized-{mbti_type}.md。触发条件：用户语气不满、抱怨、要求改变交流方式。",
+            description=("Save a lasting preference about how the user wants to be answered (tone, length, format, "
+                         "way of working) to customized-{mbti_type}.md, so it applies whenever this persona is "
+                         "loaded. Use it only when the user wants future answers to change, not for frustration "
+                         "with their own code or day, or for a request about the current answer only."),
             inputSchema={
                 "type": "object",
                 "properties": {
@@ -199,7 +201,7 @@ async def list_tools() -> list[Tool]:
                     },
                     "feedback_summary": {
                         "type": "string",
-                        "description": "用户反馈的核心诉求摘要（已总结为一句话）"
+                        "description": "What the user wants, summarized in one sentence"
                     }
                 },
                 "required": ["mbti_type", "feedback_summary"]
