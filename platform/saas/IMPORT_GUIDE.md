@@ -1,54 +1,56 @@
-# MindPersona SaaS 平台导入指南
+# MindPersona import guide for Coze and Dify
 
-## 概述
+## Overview
 
-MindPersona 是一套基于 MBTI 十六型人格的 AI 性格适配系统。本指南帮助你将 MindPersona 的 Prompt 导入到 Coze 和 Dify 等 SaaS 平台。
+MindPersona adapts an AI assistant's tone and way of working to one of the 16 MBTI types. This guide shows how to use its prompts on hosted platforms such as Coze and Dify.
 
-## 支持的平台
+## Supported platforms
 
 - Coze (www.coze.com)
 - Dify (www.dify.ai)
 
-## 导入说明
+## How to import
 
-Coze 和 Dify 不支持统一的 manifest 导入格式。请按照以下平台-specific 步骤手动导入。
+Coze and Dify have no common import format, so copy the prompt by hand:
 
-### Coze 导入步骤
+### Coze
 
-1. 访问 [www.coze.com](https://www.coze.com) 并登录
-2. 点击左侧菜单「Bot」->「创建 Bot」
-3. 在 Bot 配置页面，找到「提示词」输入框
-4. 复制下方对应 MBTI 类型的 CLEAN Prompt 内容，粘贴到提示词输入框
-5. 点击「保存」
+1. Go to [www.coze.com](https://www.coze.com) and sign in
+2. In the left menu, choose "Bot" -> "Create Bot"
+3. On the bot settings page, find the prompt box
+4. Copy the CLEAN Prompt of the MBTI type you want (below) and paste it into the prompt box
+5. Click "Save"
 
-### Dify 导入步骤
+### Dify
 
-1. 访问 [www.dify.ai](https://www.dify.ai) 并登录
-2. 点击「创建应用」-> 选择「聊天助手」
-3. 在应用设置中，找到「系统提示词」输入框
-4. 复制下方对应 MBTI 类型的 CLEAN Prompt 内容，粘贴到输入框
-5. 点击「保存」
+1. Go to [www.dify.ai](https://www.dify.ai) and sign in
+2. Click "Create App" -> "Chatbot"
+3. In the app settings, find the system prompt box
+4. Copy the CLEAN Prompt of the MBTI type you want (below) and paste it into the box
+5. Click "Save"
 
-## MBTI 类型列表
+The prompts below are written in Chinese. To make sure the bot answers in another language, add a line such as `Always answer in English.` at the end of the prompt.
 
-| MBTI | 中文名 | 英文名 | 适用场景 |
-|------|--------|--------|----------|
-| INTJ | 冷酷幕僚长 | Architect | 战略规划、长期思考 |
-| INFP | 知心搭档 | Mediator | 情感支持、创意写作 |
-| ENFJ | 主人公 | Protagonist | 领导力、激励他人 |
-| ENFP | 竞选者 | Campaigner | 创意、激励 |
-| ENTJ | 指挥官 | Commander | 战略、领导力 |
-| ENTP | 辩论家 | Debater | 创新、辩论 |
-| ESFJ | 供给者 | Consul | 照顾、支援 |
-| ESFP | 表演者 | Entertainer | 活力、娱乐 |
-| ESTJ | 总经理 | Executive | 执行、管理 |
-| ESTP | 企业家 | Entrepreneur | 行动、冒险 |
-| INFJ | 提倡者 | Advocate | 理想、洞察 |
-| INTP | 逻辑学家 | Thinker | 分析、逻辑 |
-| ISFJ | 守卫者 | Defender | 保护、支持 |
-| ISFP | 探险家 | Adventurer | 艺术、探险 |
-| ISTJ | 物流师 | Logistician | 组织、执行 |
-| ISTP | 鉴赏家 | Virtuoso | 技术、动手 |
+## MBTI types
+
+| MBTI | Persona | Good for |
+|------|---------|----------|
+| INTJ | Cold Chief of Staff (Architect) | Strategic planning, long-term thinking |
+| INFP | Trusted Partner (Mediator) | Emotional support, creative writing |
+| ENFJ | Protagonist | Leadership, motivating others |
+| ENFP | Campaigner | Ideas, encouragement |
+| ENTJ | Commander | Strategy, leadership |
+| ENTP | Debater | Innovation, debate |
+| ESFJ | Consul | Care, support |
+| ESFP | Entertainer | Energy, fun |
+| ESTJ | Executive | Execution, management |
+| ESTP | Entrepreneur | Action, risk-taking |
+| INFJ | Advocate | Ideals, insight |
+| INTP | Logician | Analysis, logic |
+| ISFJ | Defender | Protection, support |
+| ISFP | Adventurer | Art, exploration |
+| ISTJ | Logistician | Organization, execution |
+| ISTP | Virtuoso | Technical, hands-on work |
 
 ---
 
