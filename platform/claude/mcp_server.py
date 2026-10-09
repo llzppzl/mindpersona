@@ -181,6 +181,35 @@ async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptRe
         messages=[{"role": "user", "content": {"type": "text", "text": content + trigger}}]
     )
 
+LOAD_PERSONA_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
+                      "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
+
+# What each persona is best at (the Task Index in readme.md), so the model can pick one for a task
+PERSONA_GUIDE = """\
+- ESTJ: quick results, schedules and daily tasks
+- ENTJ: driving decisions forward, strategic breakdown of goals, pushing others
+- ISTJ: following the rules exactly, acceptance criteria, structured summaries
+- INTJ: comparing options and giving a clear verdict, critical review, setting priorities
+- INTP: finding logical flaws, cause-and-effect analysis
+- ISTP: tracing a problem from cause to effect, shortest hands-on path
+- INFP: taking feelings first without pushing solutions, ideas tied to personal meaning
+- ISFP: calm companionship in the moment
+- ENFP: open-minded brainstorming
+- ENTP: connecting ideas and arguing the opposite side
+- ENFJ: growth and motivation, finding the meaning of a task
+- INFJ: mission and long-term vision
+- ISFJ: patient, practical support that listens first
+- ESFJ: warm, team-minded help and recognition
+- ESTP: fast action and breaking deadlocks
+- ESFP: lively, upbeat energy"""
+
+
+async def persona_text(mbti_type: str) -> str:
+    """The persona prompt for a type, the same text /mbti-<type> gives: the skill, the user's saved
+    adjustments and the feedback instruction."""
+    result = await get_prompt(f"mbti-{mbti_type.lower()}")
+    return result.messages[0].content.text
+
 @server.list_tools()
 async def list_tools() -> list[Tool]:
     """列出所有可用工具"""
@@ -204,6 +233,26 @@ async def list_tools() -> list[Tool]:
                 },
                 "required": ["mbti_type", "feedback_summary"]
             }
+        ),
+        Tool(
+            name="load_persona",
+            description=(
+                "Load a MindPersona persona and answer as it says from then on. Call it when the user asks for "
+                "a type in plain words (\"use ESTJ to analyze this plan\", \"switch to infp\"). When the user asks "
+                "which persona fits a task, or to pick one, choose the best type from this list, call the tool "
+                "with it and tell the user which one you picked and why:\n" + PERSONA_GUIDE
+            ),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "mbti_type": {
+                        "type": "string",
+                        "description": "The MBTI type, e.g. intj or estj",
+                        "enum": LOAD_PERSONA_TYPES
+                    }
+                },
+                "required": ["mbti_type"]
+            }
         )
     ]
 
@@ -222,6 +271,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=f"✅ {message}\n\n文件路径: {MEMORY_DIR / f'customized-{mbti_type}.md'}")]
         else:
             return [TextContent(type="text", text=f"❌ {message}")]
+    elif name == "load_persona":
+        mbti_type = str(arguments.get("mbti_type", "")).strip().lower()
+        if mbti_type not in LOAD_PERSONA_TYPES:
+            return [TextContent(type="text", text=f"❌ Unknown MBTI type: {mbti_type!r}. "
+                                                  f"Valid types: {', '.join(LOAD_PERSONA_TYPES)}")]
+        text = await persona_text(mbti_type)
+        return [TextContent(type="text", text=f"Persona {mbti_type.upper()} loaded. Follow it from now on:\n\n{text}")]
     else:
         return [TextContent(type="text", text=f"未知工具: {name}")]
 
