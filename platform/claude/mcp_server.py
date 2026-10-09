@@ -225,11 +225,47 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
     else:
         return [TextContent(type="text", text=f"未知工具: {name}")]
 
+
+STARTUP_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
+                 "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
+
+
+def startup_persona(argv: list[str], environ: dict) -> Optional[str]:
+    """The persona to start every session with: --persona TYPE, or the MINDPERSONA_PERSONA
+    environment variable. None if neither is set."""
+    import argparse
+    parser = argparse.ArgumentParser(prog="mcp_server.py", description="MindPersona MCP server")
+    parser.add_argument("--persona", default=environ.get("MINDPERSONA_PERSONA") or None,
+                        help="MBTI type to use in every session, e.g. intj (default: $MINDPERSONA_PERSONA)")
+    persona = parser.parse_args(argv).persona
+    if persona is None:
+        return None
+    persona = persona.strip().lower()
+    if persona not in STARTUP_TYPES:
+        raise SystemExit(f"Unknown persona {persona!r} for --persona or MINDPERSONA_PERSONA. "
+                         f"Use one of: {', '.join(STARTUP_TYPES)}")
+    return persona
+
+
+async def persona_instructions(persona: str) -> str:
+    """Server instructions that make the persona the default. MCP clients such as Claude Code add
+    them to the model's context in every session, so no slash prompt is needed."""
+    result = await get_prompt(f"mbti-{persona}")
+    return (f"The user chose the MindPersona {persona.upper()} persona as their default. Answer as it "
+            f"says in every conversation unless they ask for another persona.\n\n"
+            + result.messages[0].content.text)
+
+
 if __name__ == "__main__":
     import mcp.server.stdio
     import asyncio
+    import sys
+
+    persona = startup_persona(sys.argv[1:], os.environ)
 
     async def main():
+        if persona:
+            server.instructions = await persona_instructions(persona)
         async with mcp.server.stdio.stdio_server() as (read_stream, write_stream):
             await server.run(
                 read_stream,

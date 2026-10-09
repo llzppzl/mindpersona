@@ -47,3 +47,13 @@ MindPersona MCP Server 允许你在 Claude Code 中使用 MBTI 性格适配 Prom
 ## 支持的 MBTI 类型
 
 INTJ, INFP, INTP, INFJ, ISTJ, ISFJ, ISTP, ISFP, ENTJ, ENTP, ENFJ, ENFP, ESTJ, ESTP, ESFJ, ESFP
+
+## Default persona
+
+To use one persona in every session without typing a prompt, add `--persona <type>` after the server path:
+
+```bash
+claude mcp add mindpersona -s user -- python /absolute/path/to/mcp_server.py --persona intj
+```
+
+The persona, with your saved adjustments, is sent to Claude as the server's instructions when a session starts. You can still switch to another persona with `/mbti-<type>`. Instead of `--persona` you can set the `MINDPERSONA_PERSONA` environment variable (`claude mcp add ... -e MINDPERSONA_PERSONA=intj -- ...`). To stop using a default, remove the server and add it again without `--persona`. An unknown type stops the server with a message listing the valid types.
