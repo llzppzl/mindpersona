@@ -45,7 +45,7 @@ def test_append_adds_entry_to_existing_file(temp_memory_dir):
 def test_template_contains_correct_format():
     """The generated template has the expected format"""
     template = get_customized_template("INTJ", "test feedback")
-    assert "# INTJ 进化版" in template
+    assert template.startswith("# INTJ - your personal version")
     assert PERSONAL_ADJUSTMENTS_HEADER in template
     assert "test feedback" in template
     assert "[20" in template  # timestamp
@@ -115,3 +115,49 @@ def test_hand_written_file_without_trailing_newline(temp_memory_dir):
     assert lines[-2] == "- （2026-04-04）Be more tactful"
     assert lines[-1].endswith("] More data")
     assert "already saved" in append_to_customized("estj", "Be more tactful")[1]
+
+
+# ---------- the English format, and files saved in the old Chinese format ----------
+
+LEGACY_HEADER = "## \u4f60\u7684\u79c1\u4eba\u8c03\u6574"  # "your personal adjustments" in Chinese
+LEGACY_FILE = (
+    "# INTJ \u8fdb\u5316\u7248\n\n" + LEGACY_HEADER + "\n\n- [2026-04-15 12:34] Lead with the conclusion\n\n"
+    "<!-- \u683c\u5f0f\uff1a(\u65f6\u95f4) \u53cd\u9988\u5185\u5bb9 -->\n"
+)
+
+
+def test_new_files_are_in_english(temp_memory_dir):
+    append_to_customized("intj", "Use tables")
+    content = read(temp_memory_dir)
+    assert content.startswith("# INTJ - your personal version")
+    assert PERSONAL_ADJUSTMENTS_HEADER == "## Your personal adjustments"
+    assert not any(0x4E00 <= ord(c) <= 0x9FFF for c in content)
+
+
+def test_old_files_keep_their_heading_and_get_new_entries(temp_memory_dir):
+    (temp_memory_dir / "customized-intj.md").write_text(LEGACY_FILE, encoding="utf-8")
+    assert append_to_customized("intj", "Use tables")[0]
+    content = read(temp_memory_dir)
+    assert content.count("##") == 1  # no second, English heading added
+    assert content.index("Lead with the conclusion") < content.index("Use tables") < content.index("<!--")
+
+
+def test_the_persona_prompt_includes_saved_adjustments_from_both_formats(temp_memory_dir):
+    import asyncio
+    import mcp_server
+
+    def prompt_text():
+        message = asyncio.run(mcp_server.get_prompt("mbti-intj")).messages[0]
+        content = message.content if hasattr(message, "content") else message["content"]
+        return content.text if hasattr(content, "text") else content["text"]
+
+    (temp_memory_dir / "customized-intj.md").write_text(LEGACY_FILE, encoding="utf-8")
+    text = prompt_text()
+    assert "## Your personal adjustments\n\n- [2026-04-15 12:34] Lead with the conclusion" in text
+    assert "<!--" not in text[text.index("## Your personal adjustments"):text.index("Lead with the conclusion")]
+
+    (temp_memory_dir / "customized-intj.md").unlink()
+    append_to_customized("intj", "Use tables")
+    text = prompt_text()
+    assert "## Your personal adjustments\n\n- [" in text and "] Use tables" in text
+    assert "Format:" not in text  # the template's closing comment isn't part of the prompt

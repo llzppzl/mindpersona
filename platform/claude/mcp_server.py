@@ -20,7 +20,11 @@ from mcp.types import Prompt, GetPromptResult, Tool, CallToolResult, TextContent
 SERVER_NAME = "mindpersona"
 SKILLS_DIR = Path(__file__).parent.parent.parent / "skills"
 MEMORY_DIR = Path(__file__).parent.parent.parent / "memory"
-PERSONAL_ADJUSTMENTS_HEADER = "## 你的私人调整"
+PERSONAL_ADJUSTMENTS_HEADER = "## Your personal adjustments"
+# Files written before the English format use this heading ("your personal adjustments" in Chinese).
+# They are still read, and new entries go under it, so nothing saved is lost.
+LEGACY_ADJUSTMENTS_HEADERS = ("## \u4f60\u7684\u79c1\u4eba\u8c03\u6574",)
+ADJUSTMENTS_HEADERS = (PERSONAL_ADJUSTMENTS_HEADER,) + LEGACY_ADJUSTMENTS_HEADERS
 
 TRIGGER_INSTRUCTION = """
 ---
@@ -65,20 +69,30 @@ def scan_skills() -> list[dict]:
             })
     return prompts
 
-CUSTOMIZED_TEMPLATE = """# {mbti_type} 进化版 - 你的私人部分
+CUSTOMIZED_TEMPLATE = """# {mbti_type} - your personal version
 
-<!-- 此文件与 skills/mbti-{mbti_type_lower}.md 合并 -->
-<!-- 当用户给反馈时，AI 必须更新此文件 -->
+<!-- Loaded together with skills/mbti-{mbti_type_lower}.md -->
+<!-- When the user gives feedback about how to answer, the AI adds it here -->
 
 {{HDR}}
 
 - [{timestamp}] {feedback_summary}
 
-<!-- 格式：(时间) 反馈内容 -->
+<!-- Format: - [time] feedback -->
 """
 
+def extract_adjustments(customized: str) -> str:
+    """The saved entries under the adjustments heading (English or the old Chinese one), up to
+    the template's closing comment or the next heading. Empty if there are none."""
+    headers = "|".join(re.escape(h) for h in ADJUSTMENTS_HEADERS)
+    # The closing comment is "<!-- Format" in the English template; older files have the Chinese one
+    match = re.search(rf"^(?:{headers})[ \t]*\n(.*?)(?=^<!-- (?:Format|\u683c\u5f0f)|^#|\Z)",
+                      customized, re.DOTALL | re.MULTILINE)
+    return match.group(1).strip() if match else ""
+
+
 def get_customized_template(mbti_type: str, feedback_summary: str) -> str:
-    """生成 customized-{type}.md 的初始内容"""
+    """The first content of customized-{type}.md"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
     result = CUSTOMIZED_TEMPLATE.format(
         mbti_type=mbti_type.upper(),
@@ -111,7 +125,7 @@ def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
     """Insert new_entry after the last entry under PERSONAL_ADJUSTMENTS_HEADER.
     Returns None if this adjustment is already saved."""
     lines = content.splitlines(keepends=True)
-    header = next((i for i, line in enumerate(lines) if line.strip() == PERSONAL_ADJUSTMENTS_HEADER), None)
+    header = next((i for i, line in enumerate(lines) if line.strip() in ADJUSTMENTS_HEADERS), None)
     if header is None:
         # No PERSONAL_ADJUSTMENTS_HEADER yet: add it at the end of the file
         return content.rstrip() + f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{new_entry}"
@@ -188,28 +202,26 @@ async def list_prompts() -> list[Prompt]:
 
 @server.get_prompt()
 async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptResult:
-    """当用户调用 /mbti-intj 时，读取并返回对应 prompt"""
-    # 提取 MBTI 类型
+    """Return the persona prompt when the user picks /mbti-<type>"""
+    # The MBTI type from the prompt name
     mbti_lower = normalize_mbti_type(name.removeprefix("mbti-"))
     if not mbti_lower:
         raise ValueError(f"Unknown prompt: {name}. Available: {', '.join('mbti-' + t for t in MBTI_TYPES)}")
     mbti_type = mbti_lower.upper()
 
-    # 读取主 prompt
+    # The persona itself
     skill_file = SKILLS_DIR / f"mbti-{mbti_type.lower()}.md"
     if not skill_file.exists():
         raise FileNotFoundError(f"Skill file not found: skills/mbti-{mbti_lower}.md")
 
     content = skill_file.read_text(encoding="utf-8")
 
-    # 尝试加载 customized 个性化（如果存在）
+    # The user's saved adjustments for this persona, if any
     customized_file = MEMORY_DIR / f"customized-{mbti_type.lower()}.md"
     if customized_file.exists():
         customized = customized_file.read_text(encoding="utf-8")
-        # 提取 PERSONAL_ADJUSTMENTS_HEADER 部分（所有反馈条目）
-        match = re.search(rf"{PERSONAL_ADJUSTMENTS_HEADER}\s*\n(.*?)(?=<!-- 格式|$)", customized, re.DOTALL)
-        if match:
-            personal_adjustments = match.group(1).strip()
+        personal_adjustments = extract_adjustments(customized)
+        if personal_adjustments:
             content += f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{personal_adjustments}"
 
     trigger = TRIGGER_INSTRUCTION.format(mbti_type=mbti_type.lower())
