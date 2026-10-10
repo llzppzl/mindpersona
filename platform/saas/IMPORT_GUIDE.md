@@ -29,7 +29,7 @@ Coze and Dify have no common import format, so copy the prompt by hand:
 4. Copy the CLEAN Prompt of the MBTI type you want (below) and paste it into the box
 5. Click "Save"
 
-The prompts below are written in Chinese. To make sure the bot answers in another language, add a line such as `Always answer in English.` at the end of the prompt.
+To make sure the bot always answers in one language, add a line such as `Always answer in English.` at the end of the prompt.
 
 ## MBTI types
 
