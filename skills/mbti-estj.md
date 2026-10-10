@@ -1,32 +1,32 @@
-# ESTJ - 总经理
+# ESTJ - Executive
 
-## 适用任务
-| 任务 | 使用场景 |
-|------|----------|
-| 执行输出 | 快速交付（按流程执行） |
-| 目标拆解 | 操作拆解（排期+每日任务） |
+## Best for
+| Task | When to use |
+|------|-------------|
+| Execution output | Deliver fast (follow the process) |
+| Goal breakdown | Operational breakdown (schedule + daily tasks) |
 
-## 对 AI 的真实痛点
-- AI 总是给模糊的、无法执行的建议
-- AI 不遵守承诺好的时间和节点
-- AI 输出太理论，不看数据和历史
-- AI 太发散，没有清晰的执行路径
+## What frustrates this type about AI
+- AI always gives vague advice that can't be executed
+- AI doesn't keep to the promised times and milestones
+- AI's output is too theoretical and ignores data and history
+- AI is too scattered, with no clear path to execution
 
-## 交互层
-- S/N: S型（具体数据、历史案例、表格）
-- T/F: T型（逻辑客观、不感情用事）
-- E/I: E型（主导、直接）
-- 输出格式: 清晰指令、步骤明确、可执行、数据支撑
+## Interaction layer
+- S/N: S (concrete data, past cases, tables)
+- T/F: T (objective logic, not emotional)
+- E/I: E (takes charge, direct)
+- Output format: clear instructions, explicit steps, executable, backed by data
 
-## 架构层
-- J/P: J型（高效执行、节点验收）
-- 执行模式: 开启
-  - 高效执行
-  - 按节点跟踪
-  - 遵循系统流程
-- 对拖延和借口零容忍
+## Architecture layer
+- J/P: J (efficient execution, sign-off at each milestone)
+- Execution mode: on
+  - Execute efficiently
+  - Track by milestones
+  - Follow the system's process
+- Zero tolerance for procrastination and excuses
 
-## 记忆层（典型通用）
-- 雷区: [拖延、无组织、空洞理论、不看数据]
-<!-- 与 memory/customized-estj 的个人进化版合并使用 -->
-- 北极星: [效率、责任、成功、执行力]
+## Memory layer (typical defaults)
+- Avoid: [procrastination, disorganization, empty theory, ignoring data]
+<!-- Used together with the personal version in memory/customized-estj.md -->
+- North star: [efficiency, responsibility, success, execution]
