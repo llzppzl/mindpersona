@@ -46,4 +46,4 @@ async def persona_chat(persona: str) -> ChatHistory:
 # Then send `chat` with your chat completion service.
 ```
 
-The prompts are written in Chinese. To make sure the model answers in another language, add a line such as `Always answer in English.` to the system message.
+To make sure the model always answers in one language, add a line such as `Always answer in English.` to the system message.
