@@ -31,7 +31,7 @@ def require_mcp_1x(server_cls=Server):
 
 require_mcp_1x()
 
-# 服务配置
+# Server settings
 SERVER_NAME = "mindpersona"
 SKILLS_DIR = Path(__file__).parent.parent.parent / "skills"
 MEMORY_DIR = Path(__file__).parent.parent.parent / "memory"
@@ -192,7 +192,7 @@ async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptRe
 
     trigger = TRIGGER_INSTRUCTION.format(mbti_type=mbti_type.lower())
     return GetPromptResult(
-        description=f"MindPersona {mbti_type} 性格适配",
+        description=f"MindPersona {mbti_type} persona",
         messages=[PromptMessage(role="user", content=TextContent(type="text", text=content + trigger))]
     )
 
