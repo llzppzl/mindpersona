@@ -230,7 +230,7 @@ async def list_tools() -> list[Tool]:
                 "properties": {
                     "mbti_type": {
                         "type": "string",
-                        "description": "当前 MBTI 类型（如 intj, entj, infp）",
+                        "description": "The current MBTI type (e.g. intj, entj, infp)",
                         "enum": MBTI_TYPES
                     },
                     "feedback_summary": {
