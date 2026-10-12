@@ -1,0 +1,28 @@
+[build-system]
+requires = ["hatchling>=1.24"]
+build-backend = "hatchling.build"
+
+[project]
+name = "mindpersona"
+version = "0.1.0"
+description = "MBTI persona prompts for AI agents, served to Claude Code as an MCP server"
+requires-python = ">=3.10"
+dependencies = [
+    # mcp 2.x removed the decorator API the server uses; before 1.22 it fails to import with current pydantic
+    "mcp>=1.22,<2",
+    # cryptography 49+ ships no Intel macOS wheels
+    "cryptography<49; sys_platform == 'darwin' and platform_machine == 'x86_64'",
+]
+
+[project.scripts]
+mindpersona = "mindpersona.cli:main"
+
+[tool.hatch.build.targets.wheel]
+# The server finds skills/ at ../../skills from its own file, so the wheel keeps that layout
+# inside the package: mindpersona/platform/claude/mcp_server.py and mindpersona/skills/
+only-include = ["mindpersona", "platform/claude", "skills"]
+exclude = ["platform/claude/tests", "__pycache__", "*.pyc"]
+
+[tool.hatch.build.targets.wheel.sources]
+"platform" = "mindpersona/platform"
+"skills" = "mindpersona/skills"
