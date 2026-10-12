@@ -25,7 +25,7 @@ def require_mcp_1x(server_cls=Server):
     if not hasattr(server_cls, "list_prompts"):
         raise SystemExit(
             "MindPersona needs mcp 1.x, but a newer mcp is installed.\n"
-            "Fix: pip install 'mcp>=1.3,<2'"
+            "Fix: pip install 'mcp>=1.22,<2'"
         )
 
 

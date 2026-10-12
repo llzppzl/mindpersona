@@ -43,7 +43,7 @@ If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the comm
 
 | Error | Fix |
 |-------|-----|
-| `MindPersona needs mcp 1.x` or `'Server' object has no attribute 'list_prompts'` | mcp 2.x is installed. Run `pip install 'mcp>=1.3,<2'` (or `pip install -r requirements.txt` again) |
+| `MindPersona needs mcp 1.x` or `'Server' object has no attribute 'list_prompts'` | mcp 2.x is installed. Run `pip install 'mcp>=1.22,<2'` (or `pip install -r requirements.txt` again) |
 | `Failed to build cryptography` on an Intel Mac | Run `pip install -r requirements.txt` again. It installs a cryptography version that has Intel wheels |
 | `No module named mcp` | The python in `claude mcp add` is not the one you installed the dependencies with. Add the server again with the full path from `which python3` |
 

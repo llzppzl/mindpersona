@@ -48,5 +48,5 @@ def test_mcp_2_gives_a_fix_instead_of_a_traceback():
     class Mcp2Server:  # mcp 2.x's Server has no list_prompts decorator
         pass
 
-    with pytest.raises(SystemExit, match="mcp>=1.3,<2"):
+    with pytest.raises(SystemExit, match="mcp>=1.22,<2"):
         require_mcp_1x(Mcp2Server)
