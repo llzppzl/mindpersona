@@ -1,3 +1,5 @@
-mcp>=1.0.0
-fastmcp>=0.1.0
-pyyaml>=6.0
+# mcp 2.0 (2026-07) removed the decorator API that mcp_server.py uses. Lift the cap after porting.
+# mcp before 1.22 fails to import with current pydantic (seen with 2.14: eval_type_backport is gone)
+mcp>=1.22,<2
+# cryptography 49+ ships no Intel macOS wheels, so pip tries to compile it there and fails
+cryptography<49; sys_platform == "darwin" and platform_machine == "x86_64"
