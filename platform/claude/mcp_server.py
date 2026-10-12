@@ -47,6 +47,11 @@ TRIGGER_INSTRUCTION = """
 # 初始化 Server
 server = Server(SERVER_NAME)
 
+# MINDPERSONA_MEMORY_DIR moves saved adjustments out of the repo. The mindpersona command sets it
+# to ~/.mindpersona/memory, so an installed copy keeps them when it is reinstalled or updated
+if os.environ.get("MINDPERSONA_MEMORY_DIR"):
+    MEMORY_DIR = Path(os.environ["MINDPERSONA_MEMORY_DIR"])
+
 def get_mbti_type_from_filename(filename: str) -> Optional[str]:
     """从文件名提取 MBTI 类型，如 mbti-intj.md -> intj"""
     match = re.match(r"mbti-([a-z]{4})\.md$", filename, re.IGNORECASE)

@@ -92,6 +92,15 @@ Diagnose MBTI → Configure interaction format & tone (S/N + T/F)
 ---
 
 ## 🚀 Quick Start
+### Claude Code in one command (with uv)
+
+If you have [uv](https://docs.astral.sh/uv/getting-started/installation/), you don't need to clone the repo or install Python packages yourself:
+
+```bash
+claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/mindpersona mindpersona
+```
+
+Restart Claude Code and pick a persona with `/`. uv downloads the server and a recent Python the first time. Your saved adjustments are kept in `~/.mindpersona/memory` (set `MINDPERSONA_MEMORY_DIR` to use another folder).
 
 ### 1. Clone the Project
 
