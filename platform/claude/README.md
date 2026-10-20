@@ -54,6 +54,11 @@ If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the comm
 - `/mbti-infp` - 切换到 INFP 知心搭档模式
 - ... (其他 14 个 MBTI 同理)
 
+Or just ask in plain words, and Claude loads the persona with the `load_persona` tool:
+- "Use ESTJ to analyze this plan"
+- "Switch to infp"
+- "Which persona fits this task? Pick one for me"
+
 ## 支持的 MBTI 类型
 
 INTJ, INFP, INTP, INFJ, ISTJ, ISFJ, ISTP, ISFP, ENTJ, ENTP, ENFJ, ENFP, ESTJ, ESTP, ESFJ, ESFP
