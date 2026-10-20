@@ -1,5 +1,5 @@
-# MindPersona 本地文件
-# 这些文件只保存在本地，不提交到 git
+# MindPersona local files
+# These stay on your machine and are never committed (your saved adjustments live here)
 
 memory/customized-*.md
 memory/user-personality.json
