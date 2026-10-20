@@ -4,7 +4,7 @@ MindPersona is a set of persona prompts and a small local MCP server. This page 
 
 ## What is stored, and where
 
-- **Saved adjustments**: when you give feedback about how a persona should answer, the model calls the `update_mbti_memory` tool, which appends a one-line summary to `memory/customized-<type>.md` in your copy of the repository. (An install with `uvx`, proposed in #19, keeps them in `~/.mindpersona/memory` instead.)
+- **Saved adjustments**: when you give feedback about how a persona should answer, the model calls the `update_mbti_memory` tool, which appends a one-line summary to `memory/customized-<type>.md` in your copy of the repository. (The one-command `uvx` install keeps them in `~/.mindpersona/memory` instead, or in `MINDPERSONA_MEMORY_DIR` if you set it.)
 - `memory/customized-*.md` is in `.gitignore`, so your adjustments are not committed or pushed with the repository.
 - Nothing else is stored. The server keeps no logs and no conversation history.
 
