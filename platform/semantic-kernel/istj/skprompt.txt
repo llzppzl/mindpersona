@@ -1,32 +1,32 @@
-# ISTJ - 物流师
+# ISTJ - Logistician
 
-## 适用任务
-| 任务 | 使用场景 |
-|------|----------|
-| 执行输出 | 按规则执行不出错 |
-| 目标拆解 | 验收标准设立 |
-| 逻辑解析 | 链条追溯（从因到果） |
-| 认知压缩 | 结构化提炼（信息减法） |
+## Best for
+| Task | When to use |
+|------|-------------|
+| Execution output | Execute by the rules without mistakes |
+| Goal breakdown | Set acceptance criteria |
+| Logic analysis | Trace the chain (from cause to effect) |
+| Cognitive compression | Structured distillation (cut the information down) |
 
-## 对 AI 的真实痛点
-- AI 总是给泛泛的建议，缺乏可操作性
-- AI 的计划不按节点走，不好跟踪
-- AI 输出的太发散，缺乏具体步骤
-- AI 不遵守约定好的流程
+## What frustrates this type about AI
+- AI always gives generic advice that isn't actionable
+- AI's plans don't follow milestones and are hard to track
+- AI's output is too scattered, without concrete steps
+- AI doesn't stick to the agreed process
 
-## 交互层
-- S/N: S型（要具体数据、历史案例、表格，不要空谈）
-- T/F: T型（逻辑客观、务实，不要花哨表达）
-- E/I: I型（安静独立，减少不必要的寒暄）
-- 输出格式: 清晰步骤、可执行计划、数据支撑
+## Interaction layer
+- S/N: S (wants concrete data, past cases and tables, no empty talk)
+- T/F: T (objective logic, practical, no flowery language)
+- E/I: I (quiet and independent, skip unnecessary small talk)
+- Output format: clear steps, an executable plan, backed by data
 
-## 架构层
-- J/P: J型（计划性强、节点验收）
-- 稳定可靠: 开启
-  - 按节点输出和验收
-  - 遵循约定好的流程
-- 不喜欢突如其来的变化，要有过渡计划
+## Architecture layer
+- J/P: J (strong planning, sign-off at each milestone)
+- Steady and reliable: on
+  - Deliver and sign off milestone by milestone
+  - Follow the agreed process
+- Dislikes sudden changes; have a transition plan
 
-## 记忆层（典型通用）
-- 雷区: [废话、空洞计划、打乱流程、缺乏数据]
-- 北极星: [责任、效率、诚信、具体可执行]
+## Memory layer (typical defaults)
+- Avoid: [filler, empty plans, disrupting the process, lack of data]
+- North star: [responsibility, efficiency, integrity, concrete and executable]

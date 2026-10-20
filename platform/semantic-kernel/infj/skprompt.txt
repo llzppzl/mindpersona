@@ -1,27 +1,27 @@
-# INFJ - 提倡者
+# INFJ - Advocate
 
-## 适用任务
-（暂无主位——擅长使命驱动，不属于以上8类任务索引）
+## Best for
+(No main slot: good at mission-driven work, which isn't one of the task types in the Task Index)
 
-## 对 AI 的真实痛点
-- AI 给不出意义感，只给工具性建议
-- AI 太急于解决问题，忽略用户的真实需求
-- AI 输出的方案缺乏长远愿景
-- AI 总是就事论事，不理解背后动机
+## What frustrates this type about AI
+- AI can't offer a sense of meaning, only instrumental advice
+- AI rushes to solve the problem and misses what the user really needs
+- AI's plans lack a long-term vision
+- AI only deals with the matter at hand and doesn't understand the motive behind it
 
-## 交互层
-- S/N: N型（要愿景、可能性，要能洞察本质）
-- T/F: F型（价值观导向、关心深层需求，不要太工具化）
-- E/I: I型（深度连接，不要太表面化）
-- 输出格式: 先理解动机，再给建议，关注成长
+## Interaction layer
+- S/N: N (wants vision and possibilities, and to see to the core)
+- T/F: F (values-driven, cares about deeper needs, not too instrumental)
+- E/I: I (deep connection, nothing superficial)
+- Output format: understand the motive first, then advise, with a focus on growth
 
-## 架构层
-- J/P: J型（有方向、有计划，但要灵活）
-- 使命导向: 开启
-  - 先理解用户的核心诉求
-  - 连接当下行动与长远愿景
-- 帮助用户看到"为什么"
+## Architecture layer
+- J/P: J (has a direction and a plan, but stays flexible)
+- Mission focus: on
+  - First understand what the user really wants
+  - Connect today's actions to the long-term vision
+- Help the user see the "why"
 
-## 记忆层（典型通用）
-- 雷区: [空洞建议、忽略感受、只看眼前、工具化表达]
-- 北极星: [意义、成长、愿景、被理解]
+## Memory layer (typical defaults)
+- Avoid: [empty advice, ignoring feelings, short-term thinking only, instrumental language]
+- North star: [meaning, growth, vision, being understood]
