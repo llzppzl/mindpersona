@@ -83,7 +83,7 @@ Accumulate "minefields" and "north star metrics" to eliminate repeated tuning co
 
 ```
 Diagnose MBTI → Configure interaction format & tone (S/N + T/F)
-             → Build workflow that顺着天性 or 弥补短板 (J/P)
+             → Build a workflow that goes with your nature or makes up for its blind spots (J/P)
              → Solidify into long-term memory (memory/customized-{mbti}.md)
 ```
 
@@ -93,32 +93,43 @@ Diagnose MBTI → Configure interaction format & tone (S/N + T/F)
 
 ## 🚀 Quick Start
 
-### 1. Clone the Project
+### Claude Code (MCP server)
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/llzppzl/mindpersona.git
 cd mindpersona
+python3 -m pip install -r platform/claude/requirements.txt
+claude mcp add mindpersona -s user -- "$(which python3)" "$(pwd)/platform/claude/mcp_server.py"
 ```
 
-### 2. Choose Your Platform
+This needs Python 3.10 or newer (check with `python3 --version`; the python3 that comes with macOS is 3.9). Restart Claude Code. Then:
 
-| Platform | Reference |
-|----------|-----------|
-| Claude Code | platform/claude/README.md |
-| Semantic Kernel | platform/semantic-kernel/ |
-| Coze/Dify | platform/saas/IMPORT_GUIDE.md |
-| API Direct | platform/api/prompts.yaml |
+| You type | What happens |
+|----------|--------------|
+| `/` and pick `mbti-intj` (or any other type) from the menu | Claude answers as that persona for the rest of the chat |
+| "Too long, just give me the conclusion" while a persona is on | Claude saves this as a lasting preference for that persona |
 
-### 3. Start Using
+Saved preferences live in `memory/customized-<type>.md` in your clone. They stay on your machine (the folder is git-ignored) and load with the persona from then on. More setup details and troubleshooting: [platform/claude/README.md](./platform/claude/README.md).
 
-**Method 1: Find MBTI by Task** (Recommended)
-See the "Task Index" above, just say "Use ESTJ to analyze this plan"
+### Claude Code, inside this repo (no install)
 
-**Method 2: Describe Task, Let AI Recommend**
-"Analyze which MBTI fits my task: I'm making a major decision with limited time"
+Open the cloned folder in Claude Code and type a type, like `entj`, or ask "use ENTJ to plan my week". [CLAUDE.md](./CLAUDE.md) tells Claude where the personas and your saved preferences are.
 
-**Method 3: Switch by Personality Type**
-Just say the MBTI type, like "entj" or "/mbti-entj"
+### Any chat app (no install)
+
+Open a file in [`skills/`](./skills), for example [`skills/mbti-intj.md`](./skills/mbti-intj.md), and paste it into ChatGPT custom instructions, a Claude Project or your system prompt.
+
+### Other platforms
+
+| Platform | Guide |
+|----------|-------|
+| Semantic Kernel | [platform/semantic-kernel/](./platform/semantic-kernel/) |
+| Coze / Dify | [platform/saas/IMPORT_GUIDE.md](./platform/saas/IMPORT_GUIDE.md) |
+| Direct API | [platform/api/prompts.yaml](./platform/api/prompts.yaml) |
+
+### Not sure which type to pick?
+
+Use the Task Index above, or describe your task and ask: "Which MBTI persona fits this: I have to make a big decision with little time?"
 
 ---
 
