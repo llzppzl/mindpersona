@@ -1,20 +1,20 @@
 # MindPersona MCP Server
 
-## 概述
+## Overview
 
-MindPersona MCP Server 允许你在 Claude Code 中使用 MBTI 性格适配 Prompt。
+The MindPersona MCP server lets you use the MBTI persona prompts in Claude Code.
 
-## 安装步骤
+## Setup
 
-1. 安装依赖：
+1. Install the dependencies:
    ```bash
    cd platform/claude
    pip install -r requirements.txt
    ```
 
-2. 添加 MCP Server 到 Claude Code：
+2. Add the MCP server to Claude Code:
 
-   **获取 Python 路径：**
+   **Find the full path of your Python** (the one you ran `pip install` with):
    ```bash
    # Windows
    where python
@@ -23,19 +23,18 @@ MindPersona MCP Server 允许你在 Claude Code 中使用 MBTI 性格适配 Prom
    which python3
    ```
 
-   **获取 mcp_server.py 绝对路径：**
-   在文件管理器中右键 `platform/claude/mcp_server.py` → 复制文件路径
+   **Find the full path of mcp_server.py:** in a terminal inside `platform/claude`, run `pwd` (macOS/Linux) or `cd` (Windows) and add `/mcp_server.py` to what it prints.
 
-   **运行以下命令（请替换路径）：**
+   **Run one of these commands, with your two paths:**
    ```bash
-   # 用户级安装（所有项目可用）
-   claude mcp add mindpersona -s user -- python 【mcp_server.py的绝对路径】
+   # For you, in every project
+   claude mcp add mindpersona -s user -- /full/path/to/python3 /full/path/to/mcp_server.py
 
-   # 或项目级安装（仅当前项目可用，可共享给团队）
-   claude mcp add mindpersona -s project -- python 【mcp_server.py的绝对路径】
+   # Or only for the current project (saved in .mcp.json, so you can share it with your team)
+   claude mcp add mindpersona -s project -- /full/path/to/python3 /full/path/to/mcp_server.py
    ```
 
-3. 重启 Claude Code（或关闭当前窗口后重新打开）
+3. Restart Claude Code (or close the window and open it again). `claude mcp list` should show `mindpersona: ... ✔ Connected`.
 
 ## Troubleshooting
 
@@ -49,10 +48,10 @@ If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the comm
 
 ## 使用方式
 
-在 Claude 输入框中：
-- `/mbti-intj` - 切换到 INTJ 逻辑学家模式
-- `/mbti-infp` - 切换到 INFP 知心搭档模式
-- ... (其他 14 个 MBTI 同理)
+In the Claude Code prompt box, type `/` and pick a persona prompt. Claude Code shows MCP prompts as `/mcp__<server>__<prompt>`:
+- `/mcp__mindpersona__mbti-intj` - switch to the INTJ (Architect) persona
+- `/mcp__mindpersona__mbti-infp` - switch to the INFP (Mediator) persona
+- ... (the other 14 types work the same way)
 
 Or just ask in plain words, and Claude loads the persona with the `load_persona` tool:
 - "Use ESTJ to analyze this plan"
