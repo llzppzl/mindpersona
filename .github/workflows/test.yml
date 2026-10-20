@@ -28,3 +28,24 @@ jobs:
         run: pip install -r platform/claude/requirements.txt pytest ${{ matrix.mcp }}
       - name: Test
         run: python -m pytest -v platform/claude/tests
+
+  # Install the package the way users do and talk to the installed command over stdio
+  installed:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install the package into its own virtualenv
+        run: |
+          python -m venv "$RUNNER_TEMP/mindpersona"
+          "$RUNNER_TEMP/mindpersona/bin/pip" install .
+      - name: Install the test client
+        run: pip install pytest "mcp>=1.22,<2"
+      - name: Test the installed command
+        run: MINDPERSONA_INSTALLED_CMD="$RUNNER_TEMP/mindpersona/bin/mindpersona" python -m pytest -v platform/claude/tests/test_installed_command.py
