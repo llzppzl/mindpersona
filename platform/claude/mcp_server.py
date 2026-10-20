@@ -140,18 +140,25 @@ def clean_summary(feedback_summary: str) -> str:
     return " ".join((feedback_summary or "").split())
 
 
+def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
+    """The index of the adjustments heading (English or old) and of the saved entries under it:
+    the "- ..." lines up to the next heading. (None, []) if there is no such heading."""
+    header = next((i for i, line in enumerate(lines) if line.strip() in ADJUSTMENTS_HEADERS), None)
+    if header is None:
+        return None, []
+    section_end = next((i for i in range(header + 1, len(lines)) if lines[i].startswith("#")), len(lines))
+    return header, [i for i in range(header + 1, section_end) if lines[i].lstrip().startswith("-")]
+
+
 def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
     """Insert new_entry after the last entry under PERSONAL_ADJUSTMENTS_HEADER.
     Returns None if this adjustment is already saved."""
     lines = content.splitlines(keepends=True)
-    header = next((i for i, line in enumerate(lines) if line.strip() in ADJUSTMENTS_HEADERS), None)
+    header, entries = _section_entries(lines)
     if header is None:
         # No PERSONAL_ADJUSTMENTS_HEADER yet: add it at the end of the file
         return content.rstrip() + f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{new_entry}"
 
-    # The section ends at the next heading
-    section_end = next((i for i in range(header + 1, len(lines)) if lines[i].startswith("#")), len(lines))
-    entries = [i for i in range(header + 1, section_end) if lines[i].lstrip().startswith("-")]
     if any(ENTRY_PREFIX.sub("", lines[i].strip()) == summary for i in entries):
         return None
 
@@ -206,6 +213,48 @@ def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, s
 
     except Exception as e:
         return False, f"Could not save the feedback: {str(e)}"
+
+def _read_entries(mbti_type: str):
+    """(lines, entry indexes, file, error) for a type's saved adjustments"""
+    mbti_lower = normalize_mbti_type(mbti_type)
+    if not mbti_lower:
+        return None, [], None, f"Unknown MBTI type: {mbti_type}. Valid types: {', '.join(MBTI_TYPES)}"
+    customized_file = MEMORY_DIR / f"customized-{mbti_lower}.md"
+    if not customized_file.exists():
+        return [], [], customized_file, None
+    lines = customized_file.read_text(encoding="utf-8").splitlines(keepends=True)
+    return lines, _section_entries(lines)[1], customized_file, None
+
+
+def list_adjustments(mbti_type: str) -> tuple[bool, str]:
+    """The saved adjustments for a type, numbered from 1, as the user can read them"""
+    lines, entries, _, error = _read_entries(mbti_type)
+    if error:
+        return False, error
+    if not entries:
+        return True, f"No saved adjustments for {mbti_type.upper()}."
+    numbered = "\n".join(f"{n}. {lines[i].strip().removeprefix('-').strip()}" for n, i in enumerate(entries, 1))
+    return True, f"Saved adjustments for {mbti_type.upper()}:\n{numbered}"
+
+
+def remove_adjustment(mbti_type: str, number) -> tuple[bool, str]:
+    """Delete saved adjustment number `number` (as list_adjustments numbers them)"""
+    lines, entries, customized_file, error = _read_entries(mbti_type)
+    if error:
+        return False, error
+    try:
+        number = int(number)
+    except (TypeError, ValueError):
+        return False, f"number must be a whole number, not {number!r}"
+    if not 1 <= number <= len(entries):
+        return False, (f"There is no adjustment {number} for {mbti_type.upper()}; "
+                       f"it has {len(entries)}." if entries else f"No saved adjustments for {mbti_type.upper()}.")
+    removed = lines[entries[number - 1]].strip().removeprefix("-").strip()
+    del lines[entries[number - 1]]
+    customized_file.write_text("".join(lines), encoding="utf-8")
+    _, remaining = list_adjustments(mbti_type)
+    return True, f"Removed: {removed}\n\n{remaining}"
+
 
 @server.list_prompts()
 async def list_prompts() -> list[Prompt]:
@@ -305,6 +354,31 @@ async def list_tools() -> list[Tool]:
             }
         ),
         Tool(
+            name="list_adjustments",
+            description=("List what MindPersona remembers for a persona: the user's saved adjustments, numbered. "
+                         "Call it when the user asks what you remember about how to answer them."),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "mbti_type": {"type": "string", "description": "The MBTI type, e.g. intj", "enum": MBTI_TYPES}
+                },
+                "required": ["mbti_type"]
+            }
+        ),
+        Tool(
+            name="remove_adjustment",
+            description=("Delete one saved adjustment by its number from list_adjustments. Call it when the user "
+                         "wants you to forget or undo one. List first, and remove only the one the user means."),
+            inputSchema={
+                "type": "object",
+                "properties": {
+                    "mbti_type": {"type": "string", "description": "The MBTI type, e.g. intj", "enum": MBTI_TYPES},
+                    "number": {"type": "integer", "description": "The adjustment's number in list_adjustments", "minimum": 1}
+                },
+                "required": ["mbti_type", "number"]
+            }
+        ),
+        Tool(
             name="load_persona",
             description=(
                 "Load a MindPersona persona and answer as it says from then on. Call it when the user asks for "
@@ -342,6 +416,13 @@ async def call_tool(name: str, arguments: dict) -> list[TextContent]:
             return [TextContent(type="text", text=f"✅ {message}\n\nFile: {path}")]
         else:
             return [TextContent(type="text", text=f"❌ {message}")]
+    elif name in ("list_adjustments", "remove_adjustment"):
+        mbti_type = str(arguments.get("mbti_type", ""))
+        if name == "list_adjustments":
+            success, message = list_adjustments(mbti_type)
+        else:
+            success, message = remove_adjustment(mbti_type, arguments.get("number"))
+        return [TextContent(type="text", text=message if success else f"❌ {message}")]
     elif name == "load_persona":
         mbti_type = str(arguments.get("mbti_type", "")).strip().lower()
         if mbti_type not in LOAD_PERSONA_TYPES:

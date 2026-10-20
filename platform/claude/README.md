@@ -68,6 +68,10 @@ Or just ask in plain words, and Claude loads the persona with the `load_persona`
 - "Switch to infp"
 - "Which persona fits this task? Pick one for me"
 
+Feedback about how to answer you ("too long, give me the conclusion first") is saved and loads with the persona from then on. To see or undo it, just ask:
+- "What do you remember about how to answer me?" (Claude calls `list_adjustments`)
+- "Forget number 2" (Claude calls `remove_adjustment`)
+
 ## Supported MBTI types
 
 INTJ, INFP, INTP, INFJ, ISTJ, ISFJ, ISTP, ISFP, ENTJ, ENTP, ENFJ, ENFP, ESTJ, ESTP, ESFJ, ESFP
