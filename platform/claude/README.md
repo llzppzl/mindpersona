@@ -4,7 +4,17 @@
 
 The MindPersona MCP server lets you use the MBTI persona prompts in Claude Code.
 
-## Setup
+## Quick setup (recommended)
+
+With [uv](https://docs.astral.sh/uv/) installed, one command adds the server; no clone and no Python setup needed:
+
+```bash
+claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/mindpersona mindpersona
+```
+
+Restart Claude Code. uv downloads the server and a recent Python the first time. Saved adjustments are kept in `~/.mindpersona/memory` (set `MINDPERSONA_MEMORY_DIR` to use another folder).
+
+## Setup from a clone
 
 1. Install the dependencies:
    ```bash
@@ -46,7 +56,7 @@ If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the comm
 | `Failed to build cryptography` on an Intel Mac | Run `pip install -r requirements.txt` again. It installs a cryptography version that has Intel wheels |
 | `No module named mcp` | The python in `claude mcp add` is not the one you installed the dependencies with. Add the server again with the full path from `which python3` |
 
-## 使用方式
+## Usage
 
 In the Claude Code prompt box, type `/` and pick a persona prompt. Claude Code shows MCP prompts as `/mcp__<server>__<prompt>`:
 - `/mcp__mindpersona__mbti-intj` - switch to the INTJ (Architect) persona
@@ -58,15 +68,19 @@ Or just ask in plain words, and Claude loads the persona with the `load_persona`
 - "Switch to infp"
 - "Which persona fits this task? Pick one for me"
 
-## 支持的 MBTI 类型
+## Supported MBTI types
 
 INTJ, INFP, INTP, INFJ, ISTJ, ISFJ, ISTP, ISFP, ENTJ, ENTP, ENFJ, ENFP, ESTJ, ESTP, ESFJ, ESFP
 
 ## Default persona
 
-To use one persona in every session without typing a prompt, add `--persona <type>` after the server path:
+To use one persona in every session without typing a prompt, add `--persona <type>` at the end of the server command:
 
 ```bash
+# With the quick setup
+claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/mindpersona mindpersona --persona intj
+
+# From a clone
 claude mcp add mindpersona -s user -- python /absolute/path/to/mcp_server.py --persona intj
 ```
 
