@@ -65,6 +65,11 @@ If you can't tell whether they want it remembered, ask. The tool creates customi
 # The MCP server
 server = Server(SERVER_NAME)
 
+# MINDPERSONA_MEMORY_DIR moves saved adjustments out of the repo. The mindpersona command sets it
+# to ~/.mindpersona/memory, so an installed copy keeps them when it is reinstalled or updated
+if os.environ.get("MINDPERSONA_MEMORY_DIR"):
+    MEMORY_DIR = Path(os.environ["MINDPERSONA_MEMORY_DIR"])
+
 def get_mbti_type_from_filename(filename: str) -> Optional[str]:
     """The MBTI type in a skill file name, e.g. mbti-intj.md -> INTJ"""
     match = re.match(r"mbti-([a-z]{4})\.md$", filename, re.IGNORECASE)
