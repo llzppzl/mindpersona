@@ -131,6 +131,10 @@ def get_customized_template(mbti_type: str, feedback_summary: str) -> str:
 
 MBTI_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
               "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
+# The values the tools accept for mbti_type. The MCP library checks arguments against the schema
+# before call_tool runs, so with only lowercase names "ESTJ" (as users write it) was refused with an
+# input validation error, though the code reads any case
+TYPE_SCHEMA_VALUES = MBTI_TYPES + [t.upper() for t in MBTI_TYPES]
 MAX_SUMMARY_CHARS = 300
 # Prefix of a saved entry: "- [2026-04-15 12:34] ", or a hand-written "- （2026-04-04）"
 ENTRY_PREFIX = re.compile(r"^-\s*(\[[^\]]*\]|（[^）]*）|\([^)]*\))?\s*")
@@ -351,7 +355,7 @@ async def list_tools() -> list[Tool]:
                     "mbti_type": {
                         "type": "string",
                         "description": "The current MBTI type (e.g. intj, entj, infp)",
-                        "enum": MBTI_TYPES
+                        "enum": TYPE_SCHEMA_VALUES
                     },
                     "feedback_summary": {
                         "type": "string",
@@ -368,7 +372,7 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "mbti_type": {"type": "string", "description": "The MBTI type, e.g. intj", "enum": MBTI_TYPES}
+                    "mbti_type": {"type": "string", "description": "The MBTI type, e.g. intj", "enum": TYPE_SCHEMA_VALUES}
                 },
                 "required": ["mbti_type"]
             }
@@ -380,8 +384,9 @@ async def list_tools() -> list[Tool]:
             inputSchema={
                 "type": "object",
                 "properties": {
-                    "mbti_type": {"type": "string", "description": "The MBTI type, e.g. intj", "enum": MBTI_TYPES},
-                    "number": {"type": "integer", "description": "The adjustment's number in list_adjustments", "minimum": 1}
+                    "mbti_type": {"type": "string", "description": "The MBTI type, e.g. intj", "enum": TYPE_SCHEMA_VALUES},
+                    # Some models send numbers as text ("2"); remove_adjustment reads both
+                    "number": {"type": ["integer", "string"], "description": "The adjustment's number in list_adjustments", "minimum": 1}
                 },
                 "required": ["mbti_type", "number"]
             }
@@ -400,7 +405,7 @@ async def list_tools() -> list[Tool]:
                     "mbti_type": {
                         "type": "string",
                         "description": "The MBTI type, e.g. intj or estj",
-                        "enum": LOAD_PERSONA_TYPES
+                        "enum": TYPE_SCHEMA_VALUES
                     }
                 },
                 "required": ["mbti_type"]

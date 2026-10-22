@@ -1,8 +1,9 @@
 """Start the real server over stdio and talk to it with the MCP client, the way Claude Code does.
 
-Read-only (list and get prompts, list tools), so nothing is written to memory/.
+Nothing is written to memory/: the tests that save adjustments use a temporary folder.
 """
 import asyncio
+import os
 import sys
 from pathlib import Path
 
@@ -13,9 +14,9 @@ from mcp.client.stdio import stdio_client
 SERVER = Path(__file__).resolve().parent.parent / "mcp_server.py"
 
 
-def run_session(scenario):
+def run_session(scenario, env=None):
     async def main():
-        params = StdioServerParameters(command=sys.executable, args=[str(SERVER)])
+        params = StdioServerParameters(command=sys.executable, args=[str(SERVER)], env=env)
         async with stdio_client(params) as (read, write):
             async with ClientSession(read, write) as session:
                 init = await session.initialize()
@@ -39,6 +40,30 @@ def test_server_starts_and_serves_prompts_and_tools(tmp_path, monkeypatch):
     assert len([p for p in prompts if p.name.startswith("mbti-")]) == 16
     assert intj.messages[0].content.text.startswith("# INTJ")
     assert "update_mbti_memory" in {t.name for t in tools}
+
+
+def test_tools_take_the_type_in_capitals_and_the_number_as_text(tmp_path):
+    """The MCP library checks arguments against the tool schema before call_tool runs. Before, the
+    schema listed only lowercase types, so "ESTJ" got "Input validation error" and the model had to
+    try again; a number sent as text ("1") was refused the same way."""
+    env = dict(os.environ, MINDPERSONA_MEMORY_DIR=str(tmp_path))
+
+    async def scenario(session, init):
+        calls = [("load_persona", {"mbti_type": "ESTJ"}),
+                 ("update_mbti_memory", {"mbti_type": "INTJ", "feedback_summary": "Lead with the verdict"}),
+                 ("list_adjustments", {"mbti_type": "INTJ"}),
+                 ("remove_adjustment", {"mbti_type": "INTJ", "number": "1"}),
+                 ("load_persona", {"mbti_type": "esfp"})]
+        return [await session.call_tool(name, args) for name, args in calls]
+
+    results = run_session(scenario, env)
+    texts = [r.content[0].text for r in results]
+    assert not any(r.isError for r in results), texts
+    assert texts[0].startswith("Persona ESTJ loaded.")
+    assert texts[1].startswith("✅ Feedback saved")
+    assert "1. [" in texts[2] and "Lead with the verdict" in texts[2]
+    assert texts[3].startswith("Removed: ") and "No saved adjustments for INTJ." in texts[3]
+    assert texts[4].startswith("Persona ESFP loaded.")
 
 
 def test_mcp_2_gives_a_fix_instead_of_a_traceback():

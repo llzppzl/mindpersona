@@ -29,7 +29,9 @@ def run(coro):
 def test_tool_is_listed_with_every_type():
     tools = {t.name: t for t in run(list_tools())}
     tool = tools["load_persona"]
-    assert sorted(tool.inputSchema["properties"]["mbti_type"]["enum"]) == sorted(LOAD_PERSONA_TYPES)
+    # In both cases, since users (and so models) write "ESTJ" as often as "estj"
+    assert sorted(tool.inputSchema["properties"]["mbti_type"]["enum"]) == sorted(
+        LOAD_PERSONA_TYPES + [t.upper() for t in LOAD_PERSONA_TYPES])
     assert len(LOAD_PERSONA_TYPES) == 16
     # The description says what each type is for, so the model can pick one
     for t in LOAD_PERSONA_TYPES:
