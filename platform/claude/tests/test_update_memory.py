@@ -161,3 +161,33 @@ def test_the_persona_prompt_includes_saved_adjustments_from_both_formats(temp_me
     text = prompt_text()
     assert "## Your personal adjustments\n\n- [" in text and "] Use tables" in text
     assert "Format:" not in text  # the template's closing comment isn't part of the prompt
+
+
+def test_entries_below_the_closing_comment_are_loaded_too(temp_memory_dir):
+    """Before: a line added by hand at the end of the file, and every entry saved after it, went
+    below the template's closing comment, was listed and reported as saved, but never loaded"""
+    import asyncio
+    import mcp_server
+
+    append_to_customized("intj", "Keep answers short")
+    with open(temp_memory_dir / "customized-intj.md", "a", encoding="utf-8") as f:
+        f.write("\n- Hand-written: no emoji\n")
+    assert append_to_customized("intj", "Use tables for comparisons") == (True, "Feedback saved")
+
+    text = asyncio.run(mcp_server.persona_text("intj"))
+    section = text[text.index("## Your personal adjustments"):text.index("## Saving feedback")]
+    for entry in ("Keep answers short", "Hand-written: no emoji", "Use tables for comparisons"):
+        assert entry in section
+    assert "<!--" not in section
+    assert "\n\n\n" not in section
+    # What is loaded is what list_adjustments shows
+    listed = mcp_server.list_adjustments("intj")[1]
+    assert listed.count("\n") == 3 and "2. Hand-written: no emoji" in listed
+
+
+def test_text_under_the_next_heading_is_not_loaded(temp_memory_dir):
+    (temp_memory_dir / "customized-intj.md").write_text(
+        f"# INTJ\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n- Lead with the verdict\n\n## Notes to self\n\n- not an adjustment\n",
+        encoding="utf-8")
+    import mcp_server
+    assert mcp_server.extract_adjustments(read(temp_memory_dir)) == "- Lead with the verdict"

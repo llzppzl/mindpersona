@@ -101,13 +101,21 @@ CUSTOMIZED_TEMPLATE = """# {mbti_type} - your personal version
 """
 
 def extract_adjustments(customized: str) -> str:
-    """The saved entries under the adjustments heading (English or the old Chinese one), up to
-    the template's closing comment or the next heading. Empty if there are none."""
-    headers = "|".join(re.escape(h) for h in ADJUSTMENTS_HEADERS)
-    # The closing comment is "<!-- Format" in the English template; older files have the Chinese one
-    match = re.search(rf"^(?:{headers})[ \t]*\n(.*?)(?=^<!-- (?:Format|\u683c\u5f0f)|^#|\Z)",
-                      customized, re.DOTALL | re.MULTILINE)
-    return match.group(1).strip() if match else ""
+    """The text under the adjustments heading (English or the old Chinese one) up to the next
+    heading, without HTML comments such as the template's closing "<!-- Format ... -->". Empty if
+    there is none.
+
+    Before, it stopped at that closing comment. A line added below it by hand was listed by
+    list_adjustments but never loaded, and so was every entry saved after it, because new entries
+    go after the last one."""
+    lines = customized.splitlines()
+    header, _ = _section_entries(lines)
+    if header is None:
+        return ""
+    end = next((i for i in range(header + 1, len(lines)) if lines[i].startswith("#")), len(lines))
+    section = re.sub(r"<!--.*?-->", "", "\n".join(lines[header + 1:end]), flags=re.DOTALL)
+    # The removed comments leave blank lines behind: keep at most one between two lines
+    return re.sub(r"\n\s*\n", "\n\n", section).strip()
 
 
 def get_customized_template(mbti_type: str, feedback_summary: str) -> str:
