@@ -33,6 +33,8 @@ When the user asks for a lasting change in how you answer them (tone, length, fo
 
 Don't save frustration with their own code, tools or day, a request about the current answer only, or something the persona already says. If you can't tell whether they want it remembered, ask.
 
+When the user asks what you remember about how to answer them, show the `- ` lines under that heading, numbered from 1. When they ask you to forget one, delete only that line, then show what is left.
+
 `memory/customized-*.md` is in `.gitignore`: it stays on the user's machine.
 
 ## Working on MindPersona

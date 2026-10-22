@@ -116,6 +116,8 @@ This needs Python 3.10 or newer (check with `python3 --version`; the python3 tha
 |----------|--------------|
 | `/` and pick `mbti-intj` (or any other type) from the menu | Claude answers as that persona for the rest of the chat |
 | "Too long, just give me the conclusion" while a persona is on | Claude saves this as a lasting preference for that persona |
+| "What do you remember about how to answer me?" | Claude lists the saved preferences, numbered |
+| "Forget number 2" | Claude removes that preference |
 
 Saved preferences live in `memory/customized-<type>.md` in your clone. They stay on your machine (the folder is git-ignored) and load with the persona from then on. More setup details and troubleshooting: [platform/claude/README.md](./platform/claude/README.md).
 

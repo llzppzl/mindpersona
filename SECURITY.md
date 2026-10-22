@@ -15,8 +15,8 @@ MindPersona is a set of persona prompts and a small local MCP server. This page 
 
 ## Things to know
 
-- **Saved adjustments become part of the prompt** every time you load that persona. Anything saved there steers the model in every later session. Read your `memory/customized-*.md` files from time to time and delete lines you don't want; they are plain text.
-- Text that the model reads (a web page, a file, a document) could try to make it save an "adjustment". Only keep lines you recognize.
+- **Saved adjustments become part of the prompt** every time you load that persona. Anything saved there steers the model in every later session. Check them from time to time: ask "What do you remember about how to answer me?" (the `list_adjustments` tool) and "Forget number 2" (`remove_adjustment`), or open `memory/customized-*.md` and delete lines you don't want; they are plain text.
+- Text that the model reads (a web page, a file, a document) could try to make it save an "adjustment", or remove one. Only keep lines you recognize, and if one you saved is gone, add it again.
 - On the other platforms (Semantic Kernel, Coze, Dify, the direct API) there is no server: you copy the persona text yourself, and nothing is saved by MindPersona.
 
 ## Reporting a vulnerability
