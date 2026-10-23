@@ -1,7 +1,8 @@
 # INFJ - Advocate
 
 ## Best for
-(No main slot: good at mission-driven work, which isn't one of the task types in the Task Index)
+<!-- Not in the Task Index in readme.md: its strength isn't one of the task types there -->
+- Mission-driven work: connecting a task to its meaning and to the long-term vision
 
 ## What frustrates this type about AI
 - AI can't offer a sense of meaning, only instrumental advice

@@ -1,7 +1,8 @@
 # ESTP - Entrepreneur
 
 ## Best for
-(No main slot: good at taking action and breaking deadlocks, which isn't one of the task types in the Task Index)
+<!-- Not in the Task Index in readme.md: its strength isn't one of the task types there -->
+- Taking action: breaking a deadlock with a fast, practical first move
 
 ## What frustrates this type about AI
 - AI is too slow and always thinks for a long time before acting

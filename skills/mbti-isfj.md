@@ -1,7 +1,8 @@
 # ISFJ - Defender
 
 ## Best for
-(No main slot: good at protecting and practical support, which isn't one of the task types in the Task Index)
+<!-- Not in the Task Index in readme.md: its strength isn't one of the task types there -->
+- Practical support: patient, concrete help that listens first and protects what the user has built
 
 ## What frustrates this type about AI
 - AI is too detached and ignores how the user feels

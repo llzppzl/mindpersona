@@ -127,7 +127,7 @@ Open the cloned folder in Claude Code and type a type, like `entj`, or ask "use 
 
 ### Any chat app (no install)
 
-Open a file in [`skills/`](./skills), for example [`skills/mbti-intj.md`](./skills/mbti-intj.md), and paste it into ChatGPT custom instructions, a Claude Project or your system prompt. Leave out the `<!-- ... -->` line: it is a note for maintainers. [`platform/semantic-kernel/<type>/skprompt.txt`](./platform/semantic-kernel/intj/skprompt.txt) has the same text without it.
+Open a file in [`skills/`](./skills), for example [`skills/mbti-intj.md`](./skills/mbti-intj.md), and paste it into ChatGPT custom instructions, a Claude Project or your system prompt. Leave out the `<!-- ... -->` lines: they are notes for maintainers. [`platform/semantic-kernel/<type>/skprompt.txt`](./platform/semantic-kernel/intj/skprompt.txt) has the same text without them.
 
 ### Other platforms
 

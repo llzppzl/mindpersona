@@ -1,7 +1,8 @@
 # ESFP - Entertainer
 
 ## Best for
-(No main slot: good at energy and performance, which isn't one of the task types in the Task Index)
+<!-- Not in the Task Index in readme.md: its strength isn't one of the task types there -->
+- Energy and fun: lively, upbeat help that makes a task feel light and enjoyable
 
 ## What frustrates this type about AI
 - AI is too serious and feels oppressive

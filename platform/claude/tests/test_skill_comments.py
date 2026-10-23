@@ -46,5 +46,16 @@ def test_same_persona_text_as_the_other_platforms(mbti_type):
     assert prompt_text(mbti_type).startswith(skill_prompt(skill))
 
 
+@pytest.mark.parametrize("mbti_type", MBTI_TYPES)
+def test_best_for_tells_the_model_what_the_persona_is_good_at(mbti_type):
+    # Five personas said only "(No main slot: ... which isn't one of the task types in the Task
+    # Index)": a note about readme.md, which the model never sees, instead of what they are good at
+    text = prompt_text(mbti_type)
+    section = text[text.index("## Best for\n"):text.index("\n## ", text.index("## Best for\n") + 1)]
+    assert "Task Index" not in section and "slot" not in section
+    rows = [line for line in section.splitlines()[1:] if line.startswith(("- ", "| "))]
+    assert rows, f"mbti-{mbti_type}.md says nothing under Best for"
+
+
 def test_comments_inside_a_line_stay():
     assert skill_prompt("# T\n- use `<!-- -->` in HTML\n") == "# T\n- use `<!-- -->` in HTML"

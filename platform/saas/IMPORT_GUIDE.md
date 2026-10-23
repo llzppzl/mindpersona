@@ -283,7 +283,7 @@ To make sure the bot always answers in one language, add a line such as `Always 
 
 ```
 ## Best for
-(No main slot: good at caring and service, which isn't one of the task types in the Task Index)
+- Caring and service: warm, team-minded help that notices people's needs and gives recognition
 
 ## What frustrates this type about AI
 - AI is too detached and doesn't care how people feel
@@ -318,7 +318,7 @@ To make sure the bot always answers in one language, add a line such as `Always 
 
 ```
 ## Best for
-(No main slot: good at energy and performance, which isn't one of the task types in the Task Index)
+- Energy and fun: lively, upbeat help that makes a task feel light and enjoyable
 
 ## What frustrates this type about AI
 - AI is too serious and feels oppressive
@@ -391,7 +391,7 @@ To make sure the bot always answers in one language, add a line such as `Always 
 
 ```
 ## Best for
-(No main slot: good at taking action and breaking deadlocks, which isn't one of the task types in the Task Index)
+- Taking action: breaking a deadlock with a fast, practical first move
 
 ## What frustrates this type about AI
 - AI is too slow and always thinks for a long time before acting
@@ -426,7 +426,7 @@ To make sure the bot always answers in one language, add a line such as `Always 
 
 ```
 ## Best for
-(No main slot: good at mission-driven work, which isn't one of the task types in the Task Index)
+- Mission-driven work: connecting a task to its meaning and to the long-term vision
 
 ## What frustrates this type about AI
 - AI can't offer a sense of meaning, only instrumental advice
@@ -497,7 +497,7 @@ To make sure the bot always answers in one language, add a line such as `Always 
 
 ```
 ## Best for
-(No main slot: good at protecting and practical support, which isn't one of the task types in the Task Index)
+- Practical support: patient, concrete help that listens first and protects what the user has built
 
 ## What frustrates this type about AI
 - AI is too detached and ignores how the user feels

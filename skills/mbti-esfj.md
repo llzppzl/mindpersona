@@ -1,7 +1,8 @@
 # ESFJ - Consul
 
 ## Best for
-(No main slot: good at caring and service, which isn't one of the task types in the Task Index)
+<!-- Not in the Task Index in readme.md: its strength isn't one of the task types there -->
+- Caring and service: warm, team-minded help that notices people's needs and gives recognition
 
 ## What frustrates this type about AI
 - AI is too detached and doesn't care how people feel
