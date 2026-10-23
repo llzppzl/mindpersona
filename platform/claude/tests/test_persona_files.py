@@ -33,6 +33,39 @@ def test_every_skill_has_the_same_sections():
         assert sections(SKILLS / f"mbti-{t}.md") == expected, f"mbti-{t}.md has different sections"
 
 
+def task_index():
+    """{task: set of types} from the Task Index table in readme.md"""
+    readme = (REPO / "readme.md").read_text(encoding="utf-8")
+    table = re.search(r"## Task Index\n(.*?)\n---", readme, re.DOTALL).group(1)
+    index = {}
+    for task, types in re.findall(r"^\| ([^|]+?) \| [^|]+ \| ([A-Z /]+) \|$", table, re.MULTILINE):
+        index[task.lower()] = {t.strip().lower() for t in types.split("/")}
+    return index
+
+
+def best_for():
+    """{task: set of types} from the "Best for" table of every skill"""
+    found = {}
+    for t in TYPES:
+        text = (SKILLS / f"mbti-{t}.md").read_text(encoding="utf-8")
+        section = re.search(r"## Best for\n(.*?)\n## ", text, re.DOTALL).group(1)
+        for task in re.findall(r"^\| ([^|]+?) \| ", section, re.MULTILINE)[1:]:  # [0] is the header
+            found.setdefault(task.lower(), set()).add(t)
+    return found
+
+
+def test_task_index_is_read():
+    index = task_index()
+    assert len(index) == 9
+    assert index["option analysis"] == {"intj", "intp"}
+
+
+def test_best_for_tables_match_the_task_index():
+    # A persona that claims a task the README recommends someone else for confuses the choice
+    # (load_persona and the README both use the Task Index)
+    assert best_for() == task_index()
+
+
 def test_api_index_lists_every_persona_with_an_existing_file():
     index = (REPO / "platform/api/prompts.yaml").read_text(encoding="utf-8")
     ids = re.findall(r'^\s*- id: "mbti-(\w+)"', index, re.MULTILINE)

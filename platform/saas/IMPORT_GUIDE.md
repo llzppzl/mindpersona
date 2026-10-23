@@ -571,7 +571,6 @@ To make sure the bot always answers in one language, add a line such as `Always 
 |------|-------------|
 | Execution output | Execute by the rules without mistakes |
 | Goal breakdown | Set acceptance criteria |
-| Logic analysis | Trace the chain (from cause to effect) |
 | Cognitive compression | Structured distillation (cut the information down) |
 
 ## What frustrates this type about AI
