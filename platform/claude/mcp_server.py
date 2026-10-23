@@ -280,6 +280,18 @@ async def list_prompts() -> list[Prompt]:
         for p in prompts
     ]
 
+# An HTML comment on a line of its own in a skill is a note for maintainers, not part of the prompt
+# (the same rule scripts/sync_platforms.py uses for the other platforms)
+SKILL_COMMENT_LINE = re.compile(r"^[ \t]*<!--.*?-->[ \t]*\n", re.MULTILINE)
+
+
+def skill_prompt(skill_text: str) -> str:
+    """The skill as the model gets it, without the maintainer comment lines. Before, Claude Code got
+    them too, such as "Used together with the personal version in memory/customized-intj.md", which
+    is the wrong place for an installed copy (it saves to ~/.mindpersona/memory)."""
+    return SKILL_COMMENT_LINE.sub("", skill_text).strip()
+
+
 @server.get_prompt()
 async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptResult:
     """Return the persona prompt when the user picks /mbti-<type>"""
@@ -294,7 +306,7 @@ async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptRe
     if not skill_file.exists():
         raise FileNotFoundError(f"Skill file not found: skills/mbti-{mbti_lower}.md")
 
-    content = skill_file.read_text(encoding="utf-8")
+    content = skill_prompt(skill_file.read_text(encoding="utf-8"))
 
     # The user's saved adjustments for this persona, if any
     customized_file = MEMORY_DIR / f"customized-{mbti_type.lower()}.md"

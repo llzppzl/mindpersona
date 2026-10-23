@@ -69,7 +69,7 @@ def initialize(*args, env=None):
 
 
 def test_server_sends_the_persona_as_instructions():
-    skill = (mcp_server.SKILLS_DIR / "mbti-estj.md").read_text(encoding="utf-8").strip()
+    skill = mcp_server.skill_prompt((mcp_server.SKILLS_DIR / "mbti-estj.md").read_text(encoding="utf-8"))
     assert skill in initialize("--persona", "estj").instructions
     assert skill in initialize(env={"MINDPERSONA_PERSONA": "estj"}).instructions
 

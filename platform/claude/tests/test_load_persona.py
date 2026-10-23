@@ -44,7 +44,7 @@ def test_returns_the_same_text_as_the_prompt(temp_memory_dir):
     prompt = run(get_prompt("mbti-estj")).messages[0].content.text
     assert text.startswith("Persona ESTJ loaded.")
     assert text.endswith(prompt)
-    assert (Path(mcp_server.SKILLS_DIR) / "mbti-estj.md").read_text(encoding="utf-8").strip() in text
+    assert mcp_server.skill_prompt((Path(mcp_server.SKILLS_DIR) / "mbti-estj.md").read_text(encoding="utf-8")) in text
 
 
 def test_includes_saved_adjustments(temp_memory_dir):
