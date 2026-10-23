@@ -185,6 +185,30 @@ def test_entries_below_the_closing_comment_are_loaded_too(temp_memory_dir):
     assert listed.count("\n") == 3 and "2. Hand-written: no emoji" in listed
 
 
+def test_an_entry_with_an_html_comment_opener_hides_nothing(temp_memory_dir):
+    """Before: every "<!--" ... "-->" was cut out, so "<!--" in an entry swallowed the rest of it
+    and every entry after it, up to the template's closing comment"""
+    import asyncio
+    import mcp_server
+
+    append_to_customized("intj", "Write code comments in Python style, not as <!-- HTML comments")
+    append_to_customized("intj", "Keep answers under ten lines")
+    text = asyncio.run(mcp_server.persona_text("intj"))
+    section = text[text.index("## Your personal adjustments"):text.index("## Saving feedback")]
+    assert "not as <!-- HTML comments" in section
+    assert "Keep answers under ten lines" in section
+    assert "Format:" not in section
+
+
+def test_comment_lines_spanning_several_lines_are_left_out(temp_memory_dir):
+    (temp_memory_dir / "customized-intj.md").write_text(
+        f"# INTJ\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n- Lead with the verdict\n<!-- a note\n   over two lines -->\n"
+        "- No emoji <!-- kept: it is part of the entry -->\n", encoding="utf-8")
+    import mcp_server
+    assert mcp_server.extract_adjustments(read(temp_memory_dir)) == (
+        "- Lead with the verdict\n\n- No emoji <!-- kept: it is part of the entry -->")
+
+
 def test_text_under_the_next_heading_is_not_loaded(temp_memory_dir):
     (temp_memory_dir / "customized-intj.md").write_text(
         f"# INTJ\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n- Lead with the verdict\n\n## Notes to self\n\n- not an adjustment\n",

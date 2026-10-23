@@ -100,20 +100,26 @@ CUSTOMIZED_TEMPLATE = """# {mbti_type} - your personal version
 <!-- Format: - [time] feedback -->
 """
 
+# An HTML comment that starts a line, such as the template's closing "<!-- Format ... -->", and may
+# go on over more lines. A "<!--" inside a saved entry is part of what the user asked for
+COMMENT_BLOCK = re.compile(r"^[ \t]*<!--.*?-->[ \t]*$", re.MULTILINE | re.DOTALL)
+
+
 def extract_adjustments(customized: str) -> str:
     """The text under the adjustments heading (English or the old Chinese one) up to the next
-    heading, without HTML comments such as the template's closing "<!-- Format ... -->". Empty if
+    heading, without comment lines such as the template's closing "<!-- Format ... -->". Empty if
     there is none.
 
     Before, it stopped at that closing comment. A line added below it by hand was listed by
     list_adjustments but never loaded, and so was every entry saved after it, because new entries
-    go after the last one."""
+    go after the last one. Then every "<!--" ... "-->" was removed, so an entry containing "<!--"
+    lost its end and hid every entry after it up to the closing comment."""
     lines = customized.splitlines()
     header, _ = _section_entries(lines)
     if header is None:
         return ""
     end = next((i for i in range(header + 1, len(lines)) if lines[i].startswith("#")), len(lines))
-    section = re.sub(r"<!--.*?-->", "", "\n".join(lines[header + 1:end]), flags=re.DOTALL)
+    section = COMMENT_BLOCK.sub("", "\n".join(lines[header + 1:end]))
     # The removed comments leave blank lines behind: keep at most one between two lines
     return re.sub(r"\n\s*\n", "\n\n", section).strip()
 
