@@ -1,5 +1,6 @@
 """The docs keep up with the server's tools."""
 import asyncio
+import re
 import sys
 from pathlib import Path
 
@@ -26,6 +27,31 @@ def test_contributing_lists_the_sections_every_skill_has():
     assert len(headings) == 5
     for heading in headings:
         assert f"`{heading}`" in contributing
+
+
+def persona_names():
+    """{"intj": "Cold Chief of Staff", ...} from the first line of each skill"""
+    names = {}
+    for skill in sorted((REPO / "skills").glob("mbti-*.md")):
+        title = skill.read_text(encoding="utf-8").splitlines()[0]
+        names[skill.stem.removeprefix("mbti-")] = title.split(" - ", 1)[1].strip()
+    return names
+
+
+def test_claude_md_uses_the_persona_names_of_the_skills():
+    # It still called INTJ "Architect" and INFP "Mediator" after the skills were renamed
+    claude_md = (REPO / "CLAUDE.md").read_text(encoding="utf-8")
+    table = dict(re.findall(r"\| `([a-z]{4})` \| ([^|]+?) (?=\|)", claude_md))
+    assert table == persona_names()
+
+
+def test_claude_setup_guide_uses_the_persona_names_of_the_skills():
+    guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
+    names = persona_names()
+    examples = re.findall(r"switch to the ([A-Z]{4}) \(([^)]+)\) persona", guide)
+    assert examples
+    for mbti_type, name in examples:
+        assert name == names[mbti_type.lower()]
 
 
 def test_claude_setup_guide_names_every_tool_the_user_can_ask_for():

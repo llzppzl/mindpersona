@@ -14,12 +14,12 @@ The user picks one by typing the type (e.g. `intj`) or asking for it ("use ESTJ 
 
 | Type | Persona | Type | Persona |
 |------|---------|------|---------|
-| `intj` | Architect | `istj` | Logistician |
+| `intj` | Cold Chief of Staff | `istj` | Logistician |
 | `intp` | Logician | `isfj` | Defender |
 | `entj` | Commander | `estj` | Executive |
 | `entp` | Debater | `esfj` | Consul |
 | `infj` | Advocate | `istp` | Virtuoso |
-| `infp` | Mediator | `isfp` | Adventurer |
+| `infp` | Trusted Partner | `isfp` | Adventurer |
 | `enfj` | Protagonist | `estp` | Entrepreneur |
 | `enfp` | Campaigner | `esfp` | Entertainer |
 

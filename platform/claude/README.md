@@ -59,8 +59,8 @@ If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the comm
 ## Usage
 
 In the Claude Code prompt box, type `/` and pick a persona prompt. Claude Code shows MCP prompts as `/mcp__<server>__<prompt>`:
-- `/mcp__mindpersona__mbti-intj` - switch to the INTJ (Architect) persona
-- `/mcp__mindpersona__mbti-infp` - switch to the INFP (Mediator) persona
+- `/mcp__mindpersona__mbti-intj` - switch to the INTJ (Cold Chief of Staff) persona
+- `/mcp__mindpersona__mbti-infp` - switch to the INFP (Trusted Partner) persona
 - ... (the other 14 types work the same way)
 
 Or just ask in plain words, and Claude loads the persona with the `load_persona` tool:
