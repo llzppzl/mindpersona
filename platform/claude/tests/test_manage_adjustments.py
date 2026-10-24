@@ -73,6 +73,26 @@ def test_old_format_files_can_be_listed_and_edited(memory):
     assert "1. [2026-04-16 09:00] No emoji" in list_adjustments("intj")[1]
 
 
+def test_lines_written_by_hand_are_listed_and_can_be_removed(memory):
+    # Everything under the heading is loaded into the persona, so the list must show all of it,
+    # however it was written; the template's comments are not adjustments
+    file = memory / "customized-intj.md"
+    file.write_text("# INTJ\n\n## Your personal adjustments\n\n<!-- my notes\n- not an entry -->\n"
+                    "* No emojis\nAnswer in British English\n- [2026-04-15 12:34] Be brief\n\n"
+                    "<!-- Format: - [time] feedback -->\n", encoding="utf-8")
+    loaded = mcp_server.extract_adjustments(file.read_text(encoding="utf-8"))
+    assert "No emojis" in loaded and "British English" in loaded and "not an entry" not in loaded
+
+    ok, text = list_adjustments("intj")
+    assert ok
+    assert text.splitlines()[1:] == ["1. No emojis", "2. Answer in British English", "3. [2026-04-15 12:34] Be brief"]
+
+    ok, text = remove_adjustment("intj", 1)
+    assert ok and text.startswith("Removed: No emojis")
+    assert "No emojis" not in mcp_server.extract_adjustments(file.read_text(encoding="utf-8"))
+    assert "<!-- my notes" in file.read_text(encoding="utf-8")
+
+
 def test_the_tools_are_offered_and_work_through_call_tool(memory):
     names = {t.name for t in asyncio.run(mcp_server.list_tools())}
     assert {"list_adjustments", "remove_adjustment"} <= names

@@ -160,12 +160,25 @@ def clean_summary(feedback_summary: str) -> str:
 
 def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
     """The index of the adjustments heading (English or old) and of the saved entries under it:
-    the "- ..." lines up to the next heading. (None, []) if there is no such heading."""
+    every line with text up to the next heading, except comment lines. (None, []) if there is no
+    such heading.
+
+    Before, only "- ..." lines counted. extract_adjustments loads every line of the section, so a
+    line written by hand as "* No emojis" or without a bullet steered the model, while
+    list_adjustments said there was nothing saved and remove_adjustment could not delete it."""
     header = next((i for i, line in enumerate(lines) if line.strip() in ADJUSTMENTS_HEADERS), None)
     if header is None:
         return None, []
     section_end = next((i for i in range(header + 1, len(lines)) if lines[i].startswith("#")), len(lines))
-    return header, [i for i in range(header + 1, section_end) if lines[i].lstrip().startswith("-")]
+    section = "".join(line if line.endswith("\n") else line + "\n" for line in lines[header + 1:section_end])
+    # Blank out the comments that extract_adjustments removes, keeping the line count
+    section = COMMENT_BLOCK.sub(lambda m: "\n" * m.group(0).count("\n"), section)
+    return header, [header + 1 + n for n, line in enumerate(section.splitlines()) if line.strip()]
+
+
+def entry_text(line: str) -> str:
+    """A saved line without its bullet ("- ", "* " or "+ ")"""
+    return re.sub(r"^[-*+]\s*", "", line.strip())
 
 
 def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
@@ -251,7 +264,7 @@ def list_adjustments(mbti_type: str) -> tuple[bool, str]:
         return False, error
     if not entries:
         return True, f"No saved adjustments for {mbti_type.upper()}."
-    numbered = "\n".join(f"{n}. {lines[i].strip().removeprefix('-').strip()}" for n, i in enumerate(entries, 1))
+    numbered = "\n".join(f"{n}. {entry_text(lines[i])}" for n, i in enumerate(entries, 1))
     return True, f"Saved adjustments for {mbti_type.upper()}:\n{numbered}"
 
 
@@ -267,7 +280,7 @@ def remove_adjustment(mbti_type: str, number) -> tuple[bool, str]:
     if not 1 <= number <= len(entries):
         return False, (f"There is no adjustment {number} for {mbti_type.upper()}; "
                        f"it has {len(entries)}." if entries else f"No saved adjustments for {mbti_type.upper()}.")
-    removed = lines[entries[number - 1]].strip().removeprefix("-").strip()
+    removed = entry_text(lines[entries[number - 1]])
     del lines[entries[number - 1]]
     customized_file.write_text("".join(lines), encoding="utf-8")
     _, remaining = list_adjustments(mbti_type)
