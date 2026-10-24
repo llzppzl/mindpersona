@@ -205,6 +205,22 @@ def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
     return "".join(lines)
 
 
+def write_safely(path: Path, content: str) -> None:
+    """Write content to path through a temporary file next to it, which then replaces path.
+
+    path.write_text empties the file before it writes, so a write that failed halfway (a full
+    disk, the server stopped while saving) left a cut-off file and every saved adjustment was lost.
+    Now path keeps its old content until the new one is complete."""
+    temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
+    try:
+        with temp.open("w", encoding="utf-8") as f:
+            f.write(content)
+        os.replace(temp, path)
+    except BaseException:
+        temp.unlink(missing_ok=True)
+        raise
+
+
 def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, str]:
     """
     Append feedback to customized-{type}.md
@@ -233,7 +249,7 @@ def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, s
             content = _add_entry(customized_file.read_text(encoding="utf-8"), new_entry, summary)
             if content is None:
                 return True, "This adjustment was already saved, so it was not added again"
-        customized_file.write_text(content, encoding="utf-8")
+        write_safely(customized_file, content)
 
         # Read it back to check the write
         verified = customized_file.read_text(encoding="utf-8")
@@ -282,7 +298,10 @@ def remove_adjustment(mbti_type: str, number) -> tuple[bool, str]:
                        f"it has {len(entries)}." if entries else f"No saved adjustments for {mbti_type.upper()}.")
     removed = entry_text(lines[entries[number - 1]])
     del lines[entries[number - 1]]
-    customized_file.write_text("".join(lines), encoding="utf-8")
+    try:
+        write_safely(customized_file, "".join(lines))
+    except OSError as e:
+        return False, f"Could not remove the adjustment, so nothing changed: {e}"
     _, remaining = list_adjustments(mbti_type)
     return True, f"Removed: {removed}\n\n{remaining}"
 

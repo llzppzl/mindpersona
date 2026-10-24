@@ -2,6 +2,8 @@
 # These stay on your machine and are never committed (your saved adjustments live here)
 
 memory/customized-*.md
+# A save in progress (left behind only if the server was killed while writing)
+memory/.customized-*.tmp
 memory/user-personality.json
 .worktrees/
 docs/
