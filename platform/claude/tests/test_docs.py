@@ -54,6 +54,23 @@ def test_claude_setup_guide_uses_the_persona_names_of_the_skills():
         assert name == names[mbti_type.lower()]
 
 
+def test_every_pain_point_in_the_readme_names_a_persona():
+    # "Idea Translator" and "Agile Coach" are no persona's name, so a reader could not tell which
+    # type to load for them
+    readme = (REPO / "readme.md").read_text(encoding="utf-8")
+    needs = [line for line in readme.splitlines() if line.strip().startswith("What you need:")]
+    assert len(needs) == 4
+    names = persona_names()
+    for line in needs:
+        match = re.search(r"the \*\*([A-Z]{4})\*\* persona", line)
+        assert match, line
+        mbti_type = match.group(1).lower()
+        assert mbti_type in names
+        # The quoted style is either the persona's own name, or the name follows in brackets
+        style = re.search(r'\*\*"([^"]+)"\*\*', line).group(1)
+        assert style == names[mbti_type] or f"({names[mbti_type]})" in line
+
+
 def test_claude_setup_guide_names_every_tool_the_user_can_ask_for():
     guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
     for name in ("load_persona", "list_adjustments", "remove_adjustment"):

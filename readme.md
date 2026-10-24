@@ -5,19 +5,19 @@
 
 1. **You are a "get-things-done, straight-to-the-point" type**
    Your problem: It's meeting time, you need to quickly assess pros and cons of a plan. You throw the question to AI, and it serves you a formulaic essay: 200 words of industry background, sprinkled with "however, admittedly," and finally a disclaimer "specific situations require specific analysis." Watching this runaround wastes your time and spikes your blood pressure. Now you have to repeatedly emphasize "no formalities, no disclaimers, data tables only" for every query — communication overhead is exhausting.
-   What you need: A **"Cold Chief of Staff"** style Agent. It knows not to hedge, not to waste words, and delivers precise conclusions like "Option A has 30% risk, Option B saves 50K, recommend B."
+   What you need: A **"Cold Chief of Staff"** style Agent: the **INTJ** persona. It knows not to hedge, not to waste words, and delivers precise conclusions like "Option A has 30% risk, Option B saves 50K, recommend B."
 
 2. **You are a "high-sensitive person who needs positive reinforcement"**
    Your problem: Feeling terrible today, work piling up, brain completely crashed. You reach out to AI for help. It instantly dumps a half-hour-by-half-hour "perfect schedule" and tells you to start the Pomodoro technique immediately. Facing these cold commands, your suffocation kicks in — no motivation to execute, just more desire to escape. In that vulnerable moment, the machine's "absolute rationality" becomes invisible pressure.
-   What you need: A **"Trusted Partner"** style Agent. It catches your emotions first, tells you "it's okay to have a bad day," then breaks tasks into tiny, pressure-free micro-tasks, coaxing you to start.
+   What you need: A **"Trusted Partner"** style Agent: the **INFP** persona. It catches your emotions first, tells you "it's okay to have a bad day," then breaks tasks into tiny, pressure-free micro-tasks, coaxing you to start.
 
 3. **You are a "think randomly, brainstorm out loud" type creator**
    Your problem: A brilliant but extremely fragmented idea pops into your head. You excitedly send this wild bunch of thoughts to AI hoping for a collision. But since it can't handle this "loose expression," it downgrades you to a bland conventional outline. Watching those generic phrases, you start doubting yourself: "Is my expression too poor? Is my Prompt written wrong?" You just wanted to chat about an idea, but got forced to learn structured prompt writing.
-   What you need: An **"Idea Translator"** style Agent. It understands your divergent thinking, catches your fragmented input, actively helps sort out logical threads — instead of demanding perfectly formed instructions from the start.
+   What you need: An **"Idea Translator"** style Agent: the **ENFP** persona (Campaigner). It understands your divergent thinking, catches your fragmented input, actively helps sort out logical threads — instead of demanding perfectly formed instructions from the start.
 
 4. **You are a "perfect planner, always stuck at execution" flexible responder**
    Your problem: Using AI for planning is excellent — it always delivers flawless execution plans. But the moment you start doing, you get stuck. Because your work habit is to iterate while doing, easily derailed by unexpected events. Yet current AI only focuses on "generating the perfect plan" — if you didn't complete yesterday's task, that perfect schedule becomes useless today. It won't pull you back mid-execution or adjust based on your progress.
-   What you need: An **"Agile Coach"** style Agent. Plans are worthless without execution. You need it to adjust course when you're stuck, pull you back when you drift, providing "dynamic companionship" as an execution guardrail — instead of dumping a rigid table at once.
+   What you need: An **"Agile Coach"** style Agent: the **ESTP** persona (Entrepreneur), which adjusts while doing instead of waiting for the perfect plan. Plans are worthless without execution. You need it to adjust course when you're stuck, pull you back when you drift, providing "dynamic companionship" as an execution guardrail — instead of dumping a rigid table at once.
 
 ---
 
