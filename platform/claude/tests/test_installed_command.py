@@ -59,6 +59,22 @@ def test_installed_server_serves_personas_and_keeps_feedback_in_home(tmp_path):
     assert "1. [" in listed and "Lead with the conclusion" in listed
 
 
+def test_installed_command_names_itself_in_help_and_in_a_terminal(tmp_path):
+    from pathlib import Path
+    import subprocess
+    from .test_terminal_start import run_in_terminal
+
+    command, *base_args = shlex.split(COMMAND)
+    env = dict(os.environ, HOME=str(tmp_path))
+    usage = subprocess.run([command, *base_args, "--help"], env=env, capture_output=True, text=True, timeout=60)
+    assert usage.stdout.startswith("usage: mindpersona ")
+
+    code, output = run_in_terminal([command, *base_args], env)
+    assert code == 0
+    assert "MindPersona is an MCP server" in output
+    assert f"-- {Path(command).resolve()}\n" in output
+
+
 def test_installed_server_takes_a_default_persona(tmp_path):
     async def scenario(session, init):
         return init.instructions or ""

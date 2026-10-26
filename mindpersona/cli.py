@@ -25,6 +25,9 @@ def find_server() -> Path:
 
 def main() -> None:
     server = find_server()
+    # So the server's help and what it prints in a terminal name this command, not mcp_server.py
+    if Path(sys.argv[0]).is_file():
+        os.environ.setdefault("MINDPERSONA_COMMAND", str(Path(sys.argv[0]).resolve()))
     # An installed package lives in a folder that pip or uv may replace on the next install,
     # so keep saved adjustments in the home folder instead (a source checkout keeps using memory/)
     if server.is_relative_to(PACKAGE_DIR) and not os.environ.get("MINDPERSONA_MEMORY_DIR"):

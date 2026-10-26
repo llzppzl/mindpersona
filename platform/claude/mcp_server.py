@@ -588,11 +588,44 @@ STARTUP_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
                  "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
 
 
+UVX_COMMAND = "uvx --from git+https://github.com/llzppzl/mindpersona mindpersona"
+
+
+def server_command(environ: dict) -> str:
+    """The command that starts this server, as `claude mcp add` takes it: the mindpersona command
+    (mindpersona/cli.py sets MINDPERSONA_COMMAND), or this python and this file."""
+    import shlex
+    import sys
+    command = environ.get("MINDPERSONA_COMMAND")
+    # uvx runs the command from its cache (.../uv/archive-v0/<id>/bin/mindpersona or
+    # environments-v2/...), which uv may delete: give the uvx line from the README instead
+    if command and any(part.startswith(("archive-v", "environments-v")) for part in Path(command).parts):
+        return UVX_COMMAND
+    if command:
+        return shlex.quote(command)
+    return f"{shlex.quote(sys.executable)} {shlex.quote(str(Path(__file__).resolve()))}"
+
+
+def terminal_notice(environ: dict) -> str:
+    """What the server says, instead of waiting, when it is started in a terminal. It talks MCP over
+    stdin and stdout, so before it printed nothing, waited for input, and did not stop on Ctrl+C."""
+    return (
+        "MindPersona is an MCP server: Claude Code starts it and talks to it over stdin and stdout,\n"
+        "so it has nothing to show in a terminal. Add it to Claude Code with\n\n"
+        f"  claude mcp add mindpersona -s user -- {server_command(environ)}\n\n"
+        "then restart Claude Code and pick a persona with /. Setup and troubleshooting:\n"
+        "https://github.com/llzppzl/mindpersona/blob/main/platform/claude/README.md"
+    )
+
+
 def startup_persona(argv: list[str], environ: dict) -> Optional[str]:
     """The persona to start every session with: --persona TYPE, or the MINDPERSONA_PERSONA
     environment variable. None if neither is set."""
     import argparse
-    parser = argparse.ArgumentParser(prog="mcp_server.py", description="MindPersona MCP server")
+    # The help names the command the user ran: "mindpersona" for the installed one
+    command = environ.get("MINDPERSONA_COMMAND")
+    parser = argparse.ArgumentParser(prog=Path(command).name if command else "mcp_server.py",
+                                     description="MindPersona MCP server")
     parser.add_argument("--persona", default=environ.get("MINDPERSONA_PERSONA") or None,
                         help="MBTI type to use in every session, e.g. intj (default: $MINDPERSONA_PERSONA)")
     persona = parser.parse_args(argv).persona
@@ -620,6 +653,9 @@ if __name__ == "__main__":
     import sys
 
     persona = startup_persona(sys.argv[1:], os.environ)
+    if sys.stdin.isatty():
+        print(terminal_notice(os.environ), file=sys.stderr)
+        sys.exit(0)
 
     async def main():
         if persona:
