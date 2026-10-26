@@ -120,7 +120,7 @@ def extract_adjustments(customized: str) -> str:
     header, _ = _section_entries(lines)
     if header is None:
         return ""
-    end = next((i for i in range(header + 1, len(lines)) if lines[i].startswith("#")), len(lines))
+    end = _section_end(lines, header)
     section = COMMENT_BLOCK.sub("", "\n".join(lines[header + 1:end]))
     # The removed comments leave blank lines behind: keep at most one between two lines
     return re.sub(r"\n\s*\n", "\n\n", section).strip()
@@ -160,10 +160,23 @@ def clean_summary(feedback_summary: str) -> str:
     return " ".join((feedback_summary or "").split())
 
 
+# A heading that ends the adjustments section: "# ..." or "## ...". A "### ..." heading that the
+# user added to group their adjustments is part of the section
+SECTION_HEADING = re.compile(r"^#{1,2}(\s|$)")
+
+
+def _section_end(lines: list[str], header: int) -> int:
+    """The index of the line after the adjustments section that starts at lines[header].
+
+    Before, any line starting with "#" ended it, so adjustments grouped under a "### Formatting"
+    heading were never loaded or listed, though they were in the file."""
+    return next((i for i in range(header + 1, len(lines)) if SECTION_HEADING.match(lines[i])), len(lines))
+
+
 def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
     """The index of the adjustments heading (English or old) and of the saved entries under it:
-    every line with text up to the next heading, except comment lines. (None, []) if there is no
-    such heading.
+    every line with text up to the next heading, except comment lines and the "### ..." headings
+    that group entries. (None, []) if there is no such heading.
 
     Before, only "- ..." lines counted. extract_adjustments loads every line of the section, so a
     line written by hand as "* No emojis" or without a bullet steered the model, while
@@ -171,11 +184,12 @@ def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
     header = next((i for i, line in enumerate(lines) if line.strip() in ADJUSTMENTS_HEADERS), None)
     if header is None:
         return None, []
-    section_end = next((i for i in range(header + 1, len(lines)) if lines[i].startswith("#")), len(lines))
+    section_end = _section_end(lines, header)
     section = "".join(line if line.endswith("\n") else line + "\n" for line in lines[header + 1:section_end])
     # Blank out the comments that extract_adjustments removes, keeping the line count
     section = COMMENT_BLOCK.sub(lambda m: "\n" * m.group(0).count("\n"), section)
-    return header, [header + 1 + n for n, line in enumerate(section.splitlines()) if line.strip()]
+    return header, [header + 1 + n for n, line in enumerate(section.splitlines())
+                    if line.strip() and not line.lstrip().startswith("#")]
 
 
 def entry_text(line: str) -> str:
@@ -195,8 +209,12 @@ def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
     if any(ENTRY_PREFIX.sub("", lines[i].strip()) == summary for i in entries):
         return None
 
-    if entries:
-        insert_at = entries[-1] + 1
+    # New entries go in the ungrouped part, before the first "### ..." heading the user added
+    first_group = next((i for i in range(header + 1, _section_end(lines, header))
+                        if lines[i].lstrip().startswith("#")), None)
+    ungrouped = [i for i in entries if first_group is None or i < first_group]
+    if ungrouped:
+        insert_at = ungrouped[-1] + 1
     else:
         insert_at = header + 1
         if insert_at < len(lines) and not lines[insert_at].strip():

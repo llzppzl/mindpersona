@@ -33,7 +33,7 @@ When the user asks for a lasting change in how you answer them (tone, length, fo
 
 Don't save frustration with their own code, tools or day, a request about the current answer only, or something the persona already says. If you can't tell whether they want it remembered, ask.
 
-When the user asks what you remember about how to answer them, show the `- ` lines under that heading, numbered from 1. When they ask you to forget one, delete only that line, then show what is left.
+When the user asks what you remember about how to answer them, show every line with text under that heading, up to the next `#` or `##` heading, numbered from 1. Leave out `<!-- ... -->` comments and the `###` headings the user may have added to group them (the MCP server numbers them the same way). When they ask you to forget one, delete only that line, then show what is left.
 
 `memory/customized-*.md` is in `.gitignore`: it stays on the user's machine.
 
