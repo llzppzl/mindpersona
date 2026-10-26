@@ -15,7 +15,7 @@
 ## Interaction layer
 - S/N: N (wants vision and possibilities, not overly practical details)
 - T/F: F (emotional support, understanding and acceptance, no cold criticism)
-- E/I: E (open to discussion, asks clarifying questions, doesn't lecture)
+- E/I: I (needs room to think things through; asks gentle clarifying questions, doesn't lecture)
 - Output format: acknowledge the feelings first, then advise, in tiny steps
 
 ## Architecture layer

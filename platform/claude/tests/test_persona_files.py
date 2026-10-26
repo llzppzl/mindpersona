@@ -33,6 +33,16 @@ def test_every_skill_has_the_same_sections():
         assert sections(SKILLS / f"mbti-{t}.md") == expected, f"mbti-{t}.md has different sections"
 
 
+def test_each_letter_line_names_the_letter_in_the_type():
+    # INFP said "E/I: E", so an introvert persona was told to answer like an extravert
+    for t in TYPES:
+        text = (SKILLS / f"mbti-{t}.md").read_text(encoding="utf-8")
+        for axis, letter in (("E/I", t[0]), ("S/N", t[1]), ("T/F", t[2]), ("J/P", t[3])):
+            line = re.search(rf"^- {axis}: (\w)\b", text, re.MULTILINE)
+            assert line, f"mbti-{t}.md has no '- {axis}:' line"
+            assert line.group(1) == letter.upper(), f"mbti-{t}.md says {axis}: {line.group(1)}"
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
