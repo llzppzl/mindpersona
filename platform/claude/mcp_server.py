@@ -43,6 +43,20 @@ PERSONAL_ADJUSTMENTS_HEADER = "## Your personal adjustments"
 LEGACY_ADJUSTMENTS_HEADERS = ("## \u4f60\u7684\u79c1\u4eba\u8c03\u6574",)
 ADJUSTMENTS_HEADERS = (PERSONAL_ADJUSTMENTS_HEADER,) + LEGACY_ADJUSTMENTS_HEADERS
 
+# How to use the persona above it. The skills describe a user of the type (what they need, what
+# frustrates them about AI) but never said what to do with that, or which wins when a saved
+# adjustment disagrees with the persona's defaults
+USAGE_INSTRUCTION = """
+
+---
+
+## Using this persona
+
+From now on, answer the user the way this {mbti_type} persona describes. It is written for a user of this type: follow its interaction layer (format and tone) and its architecture layer (way of working), stay clear of what frustrates this type and of everything under "Avoid", and aim for its north star."""
+
+ADJUSTMENTS_FIRST = (" The personal adjustments above are this user's own requests: where one of them disagrees with "
+                     "the persona, follow the adjustment.")
+
 TRIGGER_INSTRUCTION = """
 ---
 
@@ -419,12 +433,14 @@ async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptRe
 
     # The user's saved adjustments for this persona, if any
     customized_file = MEMORY_DIR / f"customized-{mbti_type.lower()}.md"
+    personal_adjustments = ""
     if customized_file.exists():
         customized = customized_file.read_text(encoding="utf-8")
         personal_adjustments = extract_adjustments(customized)
         if personal_adjustments:
             content += f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{personal_adjustments}"
 
+    content += USAGE_INSTRUCTION.format(mbti_type=mbti_type) + (ADJUSTMENTS_FIRST if personal_adjustments else "") + "\n"
     trigger = TRIGGER_INSTRUCTION.format(mbti_type=mbti_type.lower())
     return GetPromptResult(
         description=f"MindPersona {mbti_type} persona",
