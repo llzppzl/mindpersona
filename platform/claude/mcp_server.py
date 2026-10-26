@@ -10,6 +10,8 @@ Usage:
 
 import os
 import re
+import time
+from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
@@ -221,6 +223,42 @@ def write_safely(path: Path, content: str) -> None:
         raise
 
 
+# How long a save waits for another one to finish, and the age at which a lock file is taken to be
+# left over from a server that stopped while saving
+LOCK_WAIT_SECONDS = 10
+STALE_LOCK_SECONDS = 30
+
+
+@contextmanager
+def locked(path: Path):
+    """Let one save or removal at a time change path, across processes.
+
+    Every Claude Code window starts its own server, and each change reads the file, changes it and
+    writes it back. Two at the same time both read the old file, and the one that wrote last dropped
+    the other's adjustment, which had already been reported as saved. The lock is a file created
+    with O_EXCL, which works the same on every OS."""
+    lock = path.with_name(f".{path.name}.lock")
+    deadline = time.monotonic() + LOCK_WAIT_SECONDS
+    while True:
+        try:
+            os.close(os.open(lock, os.O_CREAT | os.O_EXCL | os.O_WRONLY))
+            break
+        except FileExistsError:
+            try:
+                if time.time() - lock.stat().st_mtime > STALE_LOCK_SECONDS:
+                    lock.unlink(missing_ok=True)
+                    continue
+            except FileNotFoundError:
+                continue
+            if time.monotonic() > deadline:
+                raise TimeoutError(f"{path.name} is being changed by another MindPersona server; try again")
+            time.sleep(0.02)
+    try:
+        yield
+    finally:
+        lock.unlink(missing_ok=True)
+
+
 def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, str]:
     """
     Append feedback to customized-{type}.md
@@ -242,17 +280,18 @@ def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, s
 
     try:
         MEMORY_DIR.mkdir(parents=True, exist_ok=True)
-        if not customized_file.exists():
-            # No file yet: create it with the first entry
-            content = get_customized_template(mbti_lower, summary)
-        else:
-            content = _add_entry(customized_file.read_text(encoding="utf-8"), new_entry, summary)
-            if content is None:
-                return True, "This adjustment was already saved, so it was not added again"
-        write_safely(customized_file, content)
+        with locked(customized_file):
+            if not customized_file.exists():
+                # No file yet: create it with the first entry
+                content = get_customized_template(mbti_lower, summary)
+            else:
+                content = _add_entry(customized_file.read_text(encoding="utf-8"), new_entry, summary)
+                if content is None:
+                    return True, "This adjustment was already saved, so it was not added again"
+            write_safely(customized_file, content)
 
-        # Read it back to check the write
-        verified = customized_file.read_text(encoding="utf-8")
+            # Read it back to check the write
+            verified = customized_file.read_text(encoding="utf-8")
         if summary in verified:
             return True, "Feedback saved"
         else:
@@ -286,6 +325,20 @@ def list_adjustments(mbti_type: str) -> tuple[bool, str]:
 
 def remove_adjustment(mbti_type: str, number) -> tuple[bool, str]:
     """Delete saved adjustment number `number` (as list_adjustments numbers them)"""
+    mbti_lower = normalize_mbti_type(mbti_type)
+    if not mbti_lower:
+        return False, f"Unknown MBTI type: {mbti_type}. Valid types: {', '.join(MBTI_TYPES)}"
+    customized_file = MEMORY_DIR / f"customized-{mbti_lower}.md"
+    if not customized_file.exists():
+        return _remove_entry(mbti_type, number)
+    try:
+        with locked(customized_file):
+            return _remove_entry(mbti_type, number)
+    except TimeoutError as e:
+        return False, f"Could not remove the adjustment, so nothing changed: {e}"
+
+
+def _remove_entry(mbti_type: str, number) -> tuple[bool, str]:
     lines, entries, customized_file, error = _read_entries(mbti_type)
     if error:
         return False, error

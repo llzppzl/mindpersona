@@ -4,6 +4,8 @@
 memory/customized-*.md
 # A save in progress (left behind only if the server was killed while writing)
 memory/.customized-*.tmp
+# Held while a save or removal changes a file (left behind only if the server was killed meanwhile)
+memory/.customized-*.lock
 memory/user-personality.json
 .worktrees/
 docs/
