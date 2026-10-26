@@ -99,6 +99,22 @@ def test_same_adjustment_is_not_saved_twice(temp_memory_dir):
     assert read(temp_memory_dir).count("No small talk") == 1
 
 
+def test_same_adjustment_in_other_case_bullet_or_punctuation_is_not_saved_twice(temp_memory_dir):
+    (temp_memory_dir / "customized-intj.md").write_text(
+        f"# INTJ\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n- [2026-10-01 10:00] Lead with the conclusion.\n"
+        "* Use tables for comparisons\n+ No  emojis!\n", encoding="utf-8")
+    before = read(temp_memory_dir)
+    # Before, each of these was saved again next to the line that already said it
+    for summary in ("lead with the conclusion", "Lead with the conclusion.", "Use tables for comparisons",
+                    "- No emojis", "no emojis."):
+        success, msg = append_to_customized("intj", summary)
+        assert success and "already saved" in msg, summary
+    assert read(temp_memory_dir) == before
+
+    # A different adjustment that only starts the same way is still saved
+    assert append_to_customized("intj", "Lead with the conclusion, then the risks")[1] == "Feedback saved"
+
+
 def test_memory_dir_is_created(temp_memory_dir):
     import mcp_server
     mcp_server.MEMORY_DIR = temp_memory_dir / "not-yet"

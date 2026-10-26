@@ -159,7 +159,16 @@ MBTI_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
 TYPE_SCHEMA_VALUES = MBTI_TYPES + [t.upper() for t in MBTI_TYPES]
 MAX_SUMMARY_CHARS = 300
 # Prefix of a saved entry: "- [2026-04-15 12:34] ", or a hand-written "- （2026-04-04）"
-ENTRY_PREFIX = re.compile(r"^-\s*(\[[^\]]*\]|（[^）]*）|\([^)]*\))?\s*")
+ENTRY_PREFIX = re.compile(r"^[-*+]\s*(\[[^\]]*\]|（[^）]*）|\([^)]*\))?\s*")
+
+
+def entry_key(text: str) -> str:
+    """What a saved line or a new summary says, to spot the same adjustment saved twice: without
+    the bullet and time, spaces or case, or a final period. Before, only the exact text counted, so
+    "lead with the conclusion" was saved again next to "- [...] Lead with the conclusion." and so
+    was any summary already written by hand as a "* ..." line."""
+    text = " ".join(ENTRY_PREFIX.sub("", text.strip()).split())
+    return text.casefold().rstrip(".!。！ ")
 
 
 def normalize_mbti_type(mbti_type: str) -> Optional[str]:
@@ -220,7 +229,7 @@ def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
         # No PERSONAL_ADJUSTMENTS_HEADER yet: add it at the end of the file
         return content.rstrip() + f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{new_entry}"
 
-    if any(ENTRY_PREFIX.sub("", lines[i].strip()) == summary for i in entries):
+    if any(entry_key(lines[i]) == entry_key(summary) for i in entries):
         return None
 
     # New entries go in the ungrouped part, before the first "### ..." heading the user added
