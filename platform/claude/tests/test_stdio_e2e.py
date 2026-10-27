@@ -66,6 +66,25 @@ def test_tools_take_the_type_in_capitals_and_the_number_as_text(tmp_path):
     assert texts[4].startswith("Persona ESFP loaded.")
 
 
+def test_a_tool_call_that_fails_is_marked_as_an_error(tmp_path):
+    """Before, a failed call came back with isError False and only a "❌" in its text, so Claude
+    Code showed it like a success and the model could tell the user it had saved the adjustment."""
+    env = dict(os.environ, MINDPERSONA_MEMORY_DIR=str(tmp_path))
+
+    async def scenario(session, init):
+        calls = [("update_mbti_memory", {"mbti_type": "intj", "feedback_summary": "x" * 400}),
+                 ("remove_adjustment", {"mbti_type": "intj", "number": 3}),
+                 ("update_mbti_memory", {"mbti_type": "intj", "feedback_summary": "Lead with the verdict"}),
+                 ("list_adjustments", {"mbti_type": "intj"})]
+        return [await session.call_tool(name, args) for name, args in calls]
+
+    too_long, nothing_to_remove, saved, listed = run_session(scenario, env)
+    assert too_long.isError and "too long" in too_long.content[0].text
+    assert nothing_to_remove.isError and "No saved adjustments" in nothing_to_remove.content[0].text
+    assert not saved.isError and saved.content[0].text.startswith("✅ Feedback saved")
+    assert not listed.isError and "Lead with the verdict" in listed.content[0].text
+
+
 def test_mcp_2_gives_a_fix_instead_of_a_traceback():
     sys.path.insert(0, str(SERVER.parent))
     from mcp_server import require_mcp_1x

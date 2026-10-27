@@ -559,38 +559,47 @@ async def list_tools() -> list[Tool]:
         )
     ]
 
+class ToolError(Exception):
+    """A tool call that did not do what was asked. The MCP library sends it back as a result with
+    isError set, so the client and the model see that the call failed. Before, a failure came back
+    as an ordinary result whose text began with "❌", the same as a success to the client."""
+
+    def __init__(self, message: str):
+        super().__init__(f"❌ {message}")
+
+
 @server.call_tool()
 async def call_tool(name: str, arguments: dict) -> list[TextContent]:
-    """Run a tool call"""
+    """Run a tool call. Raises ToolError when it fails."""
     if name == "update_mbti_memory":
         mbti_type = arguments.get("mbti_type", "")
         feedback_summary = arguments.get("feedback_summary", "")
 
         if not mbti_type or not feedback_summary:
-            return [TextContent(type="text", text="Error: mbti_type and feedback_summary are both required")]
+            raise ToolError("mbti_type and feedback_summary are both required")
 
         success, message = append_to_customized(mbti_type, feedback_summary)
-        if success:
-            path = MEMORY_DIR / f"customized-{normalize_mbti_type(mbti_type)}.md"
-            return [TextContent(type="text", text=f"✅ {message}\n\nFile: {path}")]
-        else:
-            return [TextContent(type="text", text=f"❌ {message}")]
+        if not success:
+            raise ToolError(message)
+        path = MEMORY_DIR / f"customized-{normalize_mbti_type(mbti_type)}.md"
+        return [TextContent(type="text", text=f"✅ {message}\n\nFile: {path}")]
     elif name in ("list_adjustments", "remove_adjustment"):
         mbti_type = str(arguments.get("mbti_type", ""))
         if name == "list_adjustments":
             success, message = list_adjustments(mbti_type)
         else:
             success, message = remove_adjustment(mbti_type, arguments.get("number"))
-        return [TextContent(type="text", text=message if success else f"❌ {message}")]
+        if not success:
+            raise ToolError(message)
+        return [TextContent(type="text", text=message)]
     elif name == "load_persona":
         mbti_type = str(arguments.get("mbti_type", "")).strip().lower()
         if mbti_type not in LOAD_PERSONA_TYPES:
-            return [TextContent(type="text", text=f"❌ Unknown MBTI type: {mbti_type!r}. "
-                                                  f"Valid types: {', '.join(LOAD_PERSONA_TYPES)}")]
+            raise ToolError(f"Unknown MBTI type: {mbti_type!r}. Valid types: {', '.join(LOAD_PERSONA_TYPES)}")
         text = await persona_text(mbti_type)
         return [TextContent(type="text", text=f"Persona {mbti_type.upper()} loaded. Follow it from now on:\n\n{text}")]
     else:
-        return [TextContent(type="text", text=f"Unknown tool: {name}")]
+        raise ToolError(f"Unknown tool: {name}")
 
 
 STARTUP_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",

@@ -54,9 +54,11 @@ def test_includes_saved_adjustments(temp_memory_dir):
 
 
 def test_unknown_type_is_an_error_not_a_crash(temp_memory_dir):
+    # A ToolError, which the MCP library sends back as a failed result (isError), not a crash
     for bad in ["abcd", "../../etc/passwd", "", None]:
-        text = run(call_tool("load_persona", {"mbti_type": bad}))[0].text
-        assert text.startswith("❌ Unknown MBTI type")
-        assert "intj" in text
-    text = run(call_tool("load_persona", {}))[0].text
-    assert text.startswith("❌ Unknown MBTI type")
+        with pytest.raises(mcp_server.ToolError) as error:
+            run(call_tool("load_persona", {"mbti_type": bad}))
+        assert str(error.value).startswith("❌ Unknown MBTI type")
+        assert "intj" in str(error.value)
+    with pytest.raises(mcp_server.ToolError, match="Unknown MBTI type"):
+        run(call_tool("load_persona", {}))
