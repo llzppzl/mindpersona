@@ -140,6 +140,24 @@ def extract_adjustments(customized: str) -> str:
     return re.sub(r"\n\s*\n", "\n\n", section).strip()
 
 
+class UnreadableAdjustments(ValueError):
+    """A customized-*.md file that is not UTF-8, e.g. edited by hand and saved by an editor in
+    another encoding (Windows-1252, GBK)."""
+
+
+def read_customized(path: Path) -> str:
+    """The text of a customized-*.md file. Raises UnreadableAdjustments, with how to fix it, if
+    it is not UTF-8. Before, the bare UnicodeDecodeError made the persona itself fail to load,
+    through the prompt and load_persona alike, and stopped a server started with --persona."""
+    try:
+        return path.read_text(encoding="utf-8")
+    except UnicodeDecodeError as e:
+        raise UnreadableAdjustments(
+            f"{path} is not saved as UTF-8 (byte {e.start} cannot be read). Open it in a text editor "
+            "and save it with the UTF-8 encoding; until then its adjustments are not loaded or changed."
+        ) from None
+
+
 def get_customized_template(mbti_type: str, feedback_summary: str) -> str:
     """The first content of customized-{type}.md"""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
@@ -326,7 +344,7 @@ def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, s
                 # No file yet: create it with the first entry
                 content = get_customized_template(mbti_lower, summary)
             else:
-                content = _add_entry(customized_file.read_text(encoding="utf-8"), new_entry, summary)
+                content = _add_entry(read_customized(customized_file), new_entry, summary)
                 if content is None:
                     return True, "This adjustment was already saved, so it was not added again"
             write_safely(customized_file, content)
@@ -349,7 +367,10 @@ def _read_entries(mbti_type: str):
     customized_file = MEMORY_DIR / f"customized-{mbti_lower}.md"
     if not customized_file.exists():
         return [], [], customized_file, None
-    lines = customized_file.read_text(encoding="utf-8").splitlines(keepends=True)
+    try:
+        lines = read_customized(customized_file).splitlines(keepends=True)
+    except UnreadableAdjustments as e:
+        return None, [], customized_file, str(e)
     return lines, _section_entries(lines)[1], customized_file, None
 
 
@@ -444,8 +465,12 @@ async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptRe
     customized_file = MEMORY_DIR / f"customized-{mbti_type.lower()}.md"
     personal_adjustments = ""
     if customized_file.exists():
-        customized = customized_file.read_text(encoding="utf-8")
-        personal_adjustments = extract_adjustments(customized)
+        try:
+            personal_adjustments = extract_adjustments(read_customized(customized_file))
+        except UnreadableAdjustments as e:
+            # The persona still loads; the model hears why the adjustments are missing and can say so
+            content += (f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n(The user's saved adjustments could not be "
+                        f"read, so they are not applied. Tell the user: {e})")
         if personal_adjustments:
             content += f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{personal_adjustments}"
 
