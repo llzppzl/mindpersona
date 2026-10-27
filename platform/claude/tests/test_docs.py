@@ -71,6 +71,18 @@ def test_every_pain_point_in_the_readme_names_a_persona():
         assert style == names[mbti_type] or f"({names[mbti_type]})" in line
 
 
+def test_troubleshooting_says_what_the_server_prints_in_a_terminal():
+    # It said the server "prints nothing and waits for input" after the server was changed to print
+    # a note and exit, so a user checking a working command thought it was broken
+    from mcp_server import terminal_notice
+    guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
+    troubleshooting = guide.split("## Troubleshooting", 1)[1].split("\n## ", 1)[0]
+    assert "waits for input" not in troubleshooting
+    assert "prints a short note that it is an MCP server" in troubleshooting
+    assert terminal_notice({}).startswith("MindPersona is an MCP server")
+    assert "claude mcp add" in terminal_notice({})
+
+
 def test_claude_setup_guide_names_every_tool_the_user_can_ask_for():
     guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
     for name in ("load_persona", "list_adjustments", "remove_adjustment"):

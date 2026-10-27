@@ -48,7 +48,7 @@ Restart Claude Code. uv downloads the server and a recent Python the first time.
 
 ## Troubleshooting
 
-If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the command after `--` yourself (`python /absolute/path/to/mcp_server.py`) to see the error. When it works, it prints nothing and waits for input. Press Ctrl+C to quit.
+If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the command after `--` yourself (`python /absolute/path/to/mcp_server.py`) to see the error. When it works, it prints a short note that it is an MCP server, with the `claude mcp add` line for that command, and exits: then the command is fine, and the problem is in how it was added (check the paths in `claude mcp get mindpersona`). Anything else it prints is the error; the table below has the common ones.
 
 | Error | Fix |
 |-------|-----|
