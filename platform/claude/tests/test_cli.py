@@ -67,6 +67,15 @@ def test_memory_dir_setting_wins_over_the_home_folder(tmp_path):
     assert not (home / ".mindpersona").exists()
 
 
+def test_memory_dir_setting_with_a_tilde_is_in_the_home_folder(tmp_path):
+    # `claude mcp add -e MINDPERSONA_MEMORY_DIR=~/notes` and .mcp.json pass "~" through unexpanded
+    site, _ = make_install(tmp_path)
+    _, home = run_cli(site, tmp_path, memory_dir="~/notes")
+
+    assert (home / "notes").is_dir()
+    assert not (tmp_path / "~").exists()
+
+
 def test_source_checkout_keeps_using_the_repo_memory_folder(tmp_path):
     checkout = tmp_path / "checkout"
     (checkout / "mindpersona").mkdir(parents=True)
@@ -87,3 +96,13 @@ def test_server_reads_memory_dir_from_the_environment(tmp_path):
     out = subprocess.run([sys.executable, "-c", code], cwd=REPO / "platform" / "claude", env=env,
                          capture_output=True, text=True, check=True, timeout=60).stdout
     assert out.strip() == str(tmp_path)
+
+
+def test_server_expands_a_tilde_in_the_memory_dir(tmp_path):
+    home = tmp_path / "home"
+    home.mkdir()
+    env = dict(os.environ, HOME=str(home), MINDPERSONA_MEMORY_DIR="~/notes")
+    code = "import mcp_server; print(mcp_server.MEMORY_DIR)"
+    out = subprocess.run([sys.executable, "-c", code], cwd=REPO / "platform" / "claude", env=env,
+                         capture_output=True, text=True, check=True, timeout=60).stdout
+    assert out.strip() == str(home / "notes")

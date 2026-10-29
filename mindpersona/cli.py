@@ -33,7 +33,8 @@ def main() -> None:
     if server.is_relative_to(PACKAGE_DIR) and not os.environ.get("MINDPERSONA_MEMORY_DIR"):
         os.environ["MINDPERSONA_MEMORY_DIR"] = str(DEFAULT_MEMORY_DIR)
     if os.environ.get("MINDPERSONA_MEMORY_DIR"):
-        Path(os.environ["MINDPERSONA_MEMORY_DIR"]).mkdir(parents=True, exist_ok=True)
+        # The value may come unexpanded from `claude mcp add -e` or .mcp.json, e.g. "~/notes"
+        Path(os.environ["MINDPERSONA_MEMORY_DIR"]).expanduser().mkdir(parents=True, exist_ok=True)
     # Same as `python mcp_server.py ...`: the server's folder is importable and argv[0] is the script
     sys.path.insert(0, str(server.parent))
     sys.argv[0] = str(server)

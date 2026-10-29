@@ -82,9 +82,11 @@ If you can't tell whether they want it remembered, ask. The tool creates customi
 server = Server(SERVER_NAME)
 
 # MINDPERSONA_MEMORY_DIR moves saved adjustments out of the repo. The mindpersona command sets it
-# to ~/.mindpersona/memory, so an installed copy keeps them when it is reinstalled or updated
+# to ~/.mindpersona/memory, so an installed copy keeps them when it is reinstalled or updated.
+# A leading ~ is expanded here: Claude Code passes `-e MINDPERSONA_MEMORY_DIR=~/notes` and .mcp.json
+# values through unexpanded, and before, adjustments went to a folder named "~" in the project
 if os.environ.get("MINDPERSONA_MEMORY_DIR"):
-    MEMORY_DIR = Path(os.environ["MINDPERSONA_MEMORY_DIR"])
+    MEMORY_DIR = Path(os.environ["MINDPERSONA_MEMORY_DIR"]).expanduser()
 
 def get_mbti_type_from_filename(filename: str) -> Optional[str]:
     """The MBTI type in a skill file name, e.g. mbti-intj.md -> INTJ"""
