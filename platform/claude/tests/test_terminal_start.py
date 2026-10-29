@@ -27,25 +27,31 @@ def run_in_terminal(cmd, env, timeout=30):
     proc = subprocess.Popen(cmd, stdin=slave, stdout=slave, stderr=slave, env=env)
     os.close(slave)
     output, deadline = b"", time.monotonic() + timeout
-    while proc.poll() is None and time.monotonic() < deadline:
+    # Read until the terminal is closed, then wait for the exit. Before, a closed terminal ended the
+    # loop and proc.poll() was checked at once: a process that had closed it but not yet exited
+    # failed the test with "still waiting after 30s" a moment after it started (seen in CI)
+    while time.monotonic() < deadline:
         if select.select([master], [], [], 0.1)[0]:
             try:
-                output += os.read(master, 65536)
+                chunk = os.read(master, 65536)
             except OSError:
                 break
-    if proc.poll() is None:
+            if not chunk:
+                break
+            output += chunk
+    os.close(master)
+    try:
+        proc.wait(timeout=max(0.0, deadline - time.monotonic()) + 5)
+    except subprocess.TimeoutExpired:
         proc.kill()
         pytest.fail(f"still waiting after {timeout}s; printed: {output.decode(errors='replace')!r}")
-    while select.select([master], [], [], 0.1)[0]:
-        try:
-            chunk = os.read(master, 65536)
-        except OSError:
-            break
-        if not chunk:
-            break
-        output += chunk
-    os.close(master)
     return proc.returncode, output.decode(errors="replace").replace("\r\n", "\n")
+
+
+def test_a_process_that_exits_just_after_closing_the_terminal_is_not_reported_as_waiting():
+    # What made test_the_server_explains_itself_in_a_terminal_and_stops fail in CI, made reliable
+    code = "import os, time; print('bye', flush=True); [os.close(fd) for fd in (0, 1, 2)]; time.sleep(0.5)"
+    assert run_in_terminal([sys.executable, "-c", code], dict(os.environ), timeout=10) == (0, "bye\n")
 
 
 def test_the_server_explains_itself_in_a_terminal_and_stops(tmp_path):
