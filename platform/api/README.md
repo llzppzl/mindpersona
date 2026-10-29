@@ -14,13 +14,23 @@ import yaml  # pip install pyyaml
 
 API_DIR = Path("platform/api")  # this folder, from the repo root
 
+# The persona describes a user of the type; this tells the model to answer that way
+USAGE = """
+
+---
+
+## Using this persona
+
+From now on, answer the user the way this {mbti_type} persona describes. It is written for a user of this type: follow its interaction layer (format and tone) and its architecture layer (way of working), stay clear of what frustrates this type and of everything under "Avoid", and aim for its north star."""
+
 
 def persona_prompt(persona_id: str) -> str:
     index = yaml.safe_load((API_DIR / "prompts.yaml").read_text(encoding="utf-8"))
     entry = next(p for p in index["prompts"] if p["id"] == persona_id)
     text = (API_DIR / entry["file"]).read_text(encoding="utf-8")
     # Lines like <!-- ... --> are notes for maintainers, not part of the prompt
-    return re.sub(r"^[ \t]*<!--.*?-->[ \t]*\n", "", text, flags=re.MULTILINE).strip()
+    text = re.sub(r"^[ \t]*<!--.*?-->[ \t]*\n", "", text, flags=re.MULTILINE).strip()
+    return text + USAGE.format(mbti_type=persona_id.removeprefix("mbti-").upper())
 
 
 system_prompt = persona_prompt("mbti-intj")
@@ -33,7 +43,8 @@ The Claude Code MCP server saves a user's feedback to `memory/customized-<type>.
 
 ```python
 adjustments = ["Lead with the conclusion.", "Use tables for comparisons."]
-system_prompt += "\n\n## Personal adjustments\n\n" + "\n".join(f"- {a}" for a in adjustments)
+system_prompt += ("\n\n## Personal adjustments\n\n" + "\n".join(f"- {a}" for a in adjustments)
+                  + "\n\nThese are the user's own requests: where one disagrees with the persona, follow it.")
 ```
 
 ## Choosing a persona

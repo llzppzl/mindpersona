@@ -26,9 +26,26 @@ SAAS_GUIDE = REPO_DIR / "platform" / "saas" / "IMPORT_GUIDE.md"
 COMMENT_LINE = re.compile(r"^[ \t]*<!--.*?-->[ \t]*\n", re.MULTILINE)
 
 
+# What to do with the persona, the same text the MCP server adds (USAGE_INSTRUCTION in
+# platform/claude/mcp_server.py; a test keeps them equal). Without it the copies only described a
+# user of the type and never told the model to answer that way
+USAGE_INSTRUCTION = """
+
+---
+
+## Using this persona
+
+From now on, answer the user the way this {mbti_type} persona describes. It is written for a user of this type: follow its interaction layer (format and tone) and its architecture layer (way of working), stay clear of what frustrates this type and of everything under "Avoid", and aim for its north star."""
+
+
 def clean_prompt(skill_text: str) -> str:
     """The skill without its comment lines: the prompt the model gets"""
     return COMMENT_LINE.sub("", skill_text).strip()
+
+
+def platform_prompt(mbti: str, prompt: str) -> str:
+    """The clean prompt with the instruction on how to use it, as the platform copies have it"""
+    return prompt + USAGE_INSTRUCTION.format(mbti_type=mbti.upper())
 
 
 def without_title(prompt: str) -> str:
@@ -52,6 +69,7 @@ def expected_files(skills: dict) -> dict:
     """{Path: the content it should have}"""
     files = {}
 
+    skills = {mbti: platform_prompt(mbti, prompt) for mbti, prompt in skills.items()}
     for mbti, prompt in skills.items():
         sk = SK_DIR / mbti
         files[sk / "skprompt.txt"] = prompt + "\n"
