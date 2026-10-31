@@ -274,7 +274,12 @@ def write_safely(path: Path, content: str) -> None:
 
     path.write_text empties the file before it writes, so a write that failed halfway (a full
     disk, the server stopped while saving) left a cut-off file and every saved adjustment was lost.
-    Now path keeps its old content until the new one is complete."""
+    Now path keeps its old content until the new one is complete.
+
+    A symlinked path (e.g. customized-intj.md linked into a dotfiles repo) is written through to
+    the file it points to. Before, the rename replaced the link with a plain file, so the linked
+    file silently stopped getting new adjustments."""
+    path = path.resolve()
     temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     try:
         with temp.open("w", encoding="utf-8") as f:

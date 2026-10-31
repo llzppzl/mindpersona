@@ -79,6 +79,25 @@ def test_a_temporary_file_left_by_a_killed_server_is_ignored_by_git(memory, monk
     assert pathlib.PurePath("memory", temps[0]).match("memory/.customized-*.tmp")
 
 
+@pytest.mark.skipif(sys.platform == "win32", reason="symlinks need extra rights on Windows")
+def test_a_symlinked_adjustments_file_stays_a_link(memory):
+    # e.g. customized-intj.md linked from a dotfiles repo: saves and removals go to the linked file
+    real = memory / "dotfiles" / "intj.md"
+    real.parent.mkdir()
+    real.write_text("## Your personal adjustments\n\n- [2026-04-15 12:34] first\n", encoding="utf-8")
+    link = memory / "customized-intj.md"
+    link.symlink_to(real)
+
+    assert append_to_customized("intj", "second")[0]
+    assert link.is_symlink()
+    assert "second" in real.read_text(encoding="utf-8")
+
+    assert remove_adjustment("intj", 1)[0]
+    assert link.is_symlink()
+    assert "first" not in real.read_text(encoding="utf-8")
+    assert sorted(p.name for p in real.parent.iterdir()) == ["intj.md"]
+
+
 def test_a_failed_removal_keeps_every_adjustment(memory, monkeypatch):
     append_to_customized("intj", "first")
     append_to_customized("intj", "second")
