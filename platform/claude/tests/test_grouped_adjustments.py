@@ -77,6 +77,19 @@ def test_a_new_adjustment_goes_before_the_groups(memory):
     assert text.index("Lead with the conclusion") < text.index("Be brief")
 
 
+def test_a_line_starting_with_a_hashtag_is_an_adjustment_not_a_heading(memory):
+    # "#nofluff" has no space after "#", so Markdown and the loaded persona treat it as text
+    (memory / "customized-intj.md").write_text(
+        "## Your personal adjustments\n\n#nofluff always\n- [2026-10-01 10:00] Be brief\n", encoding="utf-8")
+    assert "#nofluff always" in persona()
+    assert list_adjustments("intj")[1].splitlines()[1:] == ["1. #nofluff always", "2. [2026-10-01 10:00] Be brief"]
+    assert append_to_customized("intj", "Use tables")[0]
+    assert saved(memory).index("Be brief") < saved(memory).index("Use tables")
+    ok, message = remove_adjustment("intj", 1)
+    assert ok and "Removed: #nofluff always" in message
+    assert "#nofluff" not in saved(memory)
+
+
 def test_a_new_adjustment_with_only_groups_goes_under_the_heading(memory):
     (memory / "customized-intj.md").write_text(
         "## Your personal adjustments\n\n### Tone\n- Be gentle\n", encoding="utf-8")

@@ -209,6 +209,8 @@ def clean_summary(feedback_summary: str) -> str:
 # A heading that ends the adjustments section: "# ..." or "## ...". A "### ..." heading that the
 # user added to group their adjustments is part of the section
 SECTION_HEADING = re.compile(r"^#{1,2}(\s|$)")
+# Any Markdown heading, such as a "### Formatting" group. "#nofluff" is not one: it is a line of text
+GROUP_HEADING = re.compile(r"^\s*#+(\s|$)")
 
 
 def _section_end(lines: list[str], header: int) -> int:
@@ -226,7 +228,8 @@ def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
 
     Before, only "- ..." lines counted. extract_adjustments loads every line of the section, so a
     line written by hand as "* No emojis" or without a bullet steered the model, while
-    list_adjustments said there was nothing saved and remove_adjustment could not delete it."""
+    list_adjustments said there was nothing saved and remove_adjustment could not delete it. The
+    same went for a line such as "#nofluff always", which was taken for a heading."""
     header = next((i for i, line in enumerate(lines) if line.strip() in ADJUSTMENTS_HEADERS), None)
     if header is None:
         return None, []
@@ -235,7 +238,7 @@ def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
     # Blank out the comments that extract_adjustments removes, keeping the line count
     section = COMMENT_BLOCK.sub(lambda m: "\n" * m.group(0).count("\n"), section)
     return header, [header + 1 + n for n, line in enumerate(section.splitlines())
-                    if line.strip() and not line.lstrip().startswith("#")]
+                    if line.strip() and not GROUP_HEADING.match(line)]
 
 
 def entry_text(line: str) -> str:
@@ -257,7 +260,7 @@ def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
 
     # New entries go in the ungrouped part, before the first "### ..." heading the user added
     first_group = next((i for i in range(header + 1, _section_end(lines, header))
-                        if lines[i].lstrip().startswith("#")), None)
+                        if GROUP_HEADING.match(lines[i])), None)
     ungrouped = [i for i in entries if first_group is None or i < first_group]
     if ungrouped:
         insert_at = ungrouped[-1] + 1
