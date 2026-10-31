@@ -112,7 +112,7 @@ CUSTOMIZED_TEMPLATE = """# {mbti_type} - your personal version
 <!-- Loaded together with skills/mbti-{mbti_type_lower}.md -->
 <!-- When the user gives feedback about how to answer, the AI adds it here -->
 
-{{HDR}}
+{header}
 
 - [{timestamp}] {feedback_summary}
 
@@ -162,15 +162,17 @@ def read_customized(path: Path) -> str:
 
 
 def get_customized_template(mbti_type: str, feedback_summary: str) -> str:
-    """The first content of customized-{type}.md"""
+    """The first content of customized-{type}.md. The heading goes in through format() too: before,
+    it replaced "{HDR}" afterwards, also inside the summary, so a first save of "Write {HDR} as a
+    placeholder" stored other text and was reported as failed."""
     timestamp = datetime.now().strftime("%Y-%m-%d %H:%M")
-    result = CUSTOMIZED_TEMPLATE.format(
+    return CUSTOMIZED_TEMPLATE.format(
         mbti_type=mbti_type.upper(),
         mbti_type_lower=mbti_type.lower(),
+        header=PERSONAL_ADJUSTMENTS_HEADER,
         timestamp=timestamp,
         feedback_summary=feedback_summary
     )
-    return result.replace("{HDR}", PERSONAL_ADJUSTMENTS_HEADER)
 
 MBTI_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
               "entj", "entp", "enfj", "enfp", "estj", "esfj", "estp", "esfp"]
