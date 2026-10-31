@@ -43,6 +43,26 @@ def test_each_letter_line_names_the_letter_in_the_type():
             assert line.group(1) == letter.upper(), f"mbti-{t}.md says {axis}: {line.group(1)}"
 
 
+# Words that describe each letter. A letter line must use one: ESFJ described J as "responsible,
+# cares about others" (an F trait) and ISFJ described I as "needs recognition"
+LETTER_WORDS = {
+    "E": ("sociable", "outgoing", "expressive", "take charge", "takes charge"),
+    "I": ("quiet", "reserved", "independent", "room", "space", "deep", "check-in"),
+    "J": ("plan", "goal", "milestone", "direction", "organized"),
+    "P": ("flexible", "open", "adaptive"),
+}
+
+
+def test_each_letter_line_describes_its_letter():
+    for t in TYPES:
+        text = (SKILLS / f"mbti-{t}.md").read_text(encoding="utf-8")
+        for axis, letter in (("E/I", t[0]), ("J/P", t[3])):
+            line = re.search(rf"^- {axis}: \w \((.*)\)$", text, re.MULTILINE).group(1)
+            assert any(w in line for w in LETTER_WORDS[letter.upper()]), f"mbti-{t}.md: {axis}: ({line})"
+    isfj = (SKILLS / "mbti-isfj.md").read_text(encoding="utf-8")
+    assert "recognition" not in re.search(r"^- E/I: .*$", isfj, re.MULTILINE).group(0)
+
+
 def test_enfp_does_not_close_every_idea_with_a_plan():
     # ENFP said "Don't wrap up too early" and avoids "wrapping up too early", but its last rule was
     # "Hard rule: every idea comes with a plan for carrying it out", so the model got both

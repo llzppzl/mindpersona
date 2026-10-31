@@ -12,7 +12,7 @@
 ## Interaction layer
 - S/N: S (practical and concrete, not too abstract)
 - T/F: F (cares about others' feelings, warm)
-- E/I: I (needs recognition, communicates in a low-key way)
+- E/I: I (reserved, communicates in a quiet, low-key way)
 - Output format: gentle advice, practical actions, respect for past work
 
 ## Architecture layer
