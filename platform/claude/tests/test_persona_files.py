@@ -43,6 +43,16 @@ def test_each_letter_line_names_the_letter_in_the_type():
             assert line.group(1) == letter.upper(), f"mbti-{t}.md says {axis}: {line.group(1)}"
 
 
+def test_enfp_does_not_close_every_idea_with_a_plan():
+    # ENFP said "Don't wrap up too early" and avoids "wrapping up too early", but its last rule was
+    # "Hard rule: every idea comes with a plan for carrying it out", so the model got both
+    text = (SKILLS / "mbti-enfp.md").read_text(encoding="utf-8")
+    architecture = re.search(r"## Architecture layer\n(.*?)\n## ", text, re.DOTALL).group(1)
+    assert "every idea" not in architecture
+    assert "Don't wrap up too early" in architecture
+    assert re.search(r"^- Once the ideas have run their course", architecture, re.MULTILINE)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
