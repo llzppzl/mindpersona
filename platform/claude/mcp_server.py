@@ -10,6 +10,7 @@ Usage:
 
 import os
 import re
+import stat
 import time
 from contextlib import contextmanager
 from datetime import datetime
@@ -296,12 +297,17 @@ def write_safely(path: Path, content: str) -> None:
 
     A symlinked path (e.g. customized-intj.md linked into a dotfiles repo) is written through to
     the file it points to. Before, the rename replaced the link with a plain file, so the linked
-    file silently stopped getting new adjustments."""
+    file silently stopped getting new adjustments.
+
+    The file keeps its permissions. Before, the new file got the default ones, so a file the user
+    had made private (chmod 600) became readable by everyone again on the next save."""
     path = path.resolve()
     temp = path.with_name(f".{path.name}.{os.getpid()}.tmp")
     try:
         with temp.open("w", encoding="utf-8") as f:
             f.write(content)
+        if path.exists():
+            os.chmod(temp, stat.S_IMODE(path.stat().st_mode))
         os.replace(temp, path)
     except BaseException:
         temp.unlink(missing_ok=True)

@@ -2,6 +2,7 @@
 import io
 import pathlib
 import shutil
+import stat
 import sys
 import tempfile
 from pathlib import Path
@@ -96,6 +97,19 @@ def test_a_symlinked_adjustments_file_stays_a_link(memory):
     assert link.is_symlink()
     assert "first" not in real.read_text(encoding="utf-8")
     assert sorted(p.name for p in real.parent.iterdir()) == ["intj.md"]
+
+
+@pytest.mark.skipif(sys.platform == "win32", reason="Windows has no Unix file permissions")
+def test_saves_and_removals_keep_the_file_private(memory):
+    # Before: the file the user made private with chmod 600 was 644 again after the next save
+    path = memory / "customized-intj.md"
+    append_to_customized("intj", "first")
+    path.chmod(0o600)
+
+    assert append_to_customized("intj", "second")[0]
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
+    assert remove_adjustment("intj", 1)[0]
+    assert stat.S_IMODE(path.stat().st_mode) == 0o600
 
 
 def test_a_failed_removal_keeps_every_adjustment(memory, monkeypatch):
