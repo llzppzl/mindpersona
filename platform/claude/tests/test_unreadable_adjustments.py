@@ -42,3 +42,19 @@ def test_the_tools_say_how_to_fix_the_file_and_change_nothing(memory):
         assert ok is False
         assert "save it with the UTF-8 encoding" in message
     assert (memory / "customized-intj.md").read_bytes() == NOT_UTF8
+
+
+def test_a_file_saved_with_a_byte_order_mark_is_read(tmp_path, monkeypatch):
+    # Notepad's "UTF-8 with BOM" puts \ufeff before the heading, which then was not found
+    monkeypatch.setattr(mcp_server, "MEMORY_DIR", tmp_path)
+    path = tmp_path / "customized-intj.md"
+    path.write_text("\ufeff## Your personal adjustments\n\n- No emojis\n", encoding="utf-8")
+
+    assert mcp_server.list_adjustments("intj") == (True, "Saved adjustments for INTJ:\n1. No emojis")
+    text = asyncio.run(mcp_server.get_prompt("mbti-intj")).messages[0].content.text
+    assert "- No emojis" in text
+
+    assert mcp_server.append_to_customized("intj", "Use tables")[0]
+    saved = path.read_text(encoding="utf-8")
+    assert saved.count("## Your personal adjustments") == 1
+    assert "- No emojis\n- [" in saved

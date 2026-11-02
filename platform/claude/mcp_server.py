@@ -151,9 +151,13 @@ class UnreadableAdjustments(ValueError):
 def read_customized(path: Path) -> str:
     """The text of a customized-*.md file. Raises UnreadableAdjustments, with how to fix it, if
     it is not UTF-8. Before, the bare UnicodeDecodeError made the persona itself fail to load,
-    through the prompt and load_persona alike, and stopped a server started with --persona."""
+    through the prompt and load_persona alike, and stopped a server started with --persona.
+
+    A byte order mark at the start (Notepad's "UTF-8 with BOM") is dropped. Before, it stuck to
+    the first line, so an adjustments heading there was not found: nothing was loaded or listed,
+    and the next save added a second heading below the hidden one."""
     try:
-        return path.read_text(encoding="utf-8")
+        return path.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as e:
         raise UnreadableAdjustments(
             f"{path} is not saved as UTF-8 (byte {e.start} cannot be read). Open it in a text editor "
