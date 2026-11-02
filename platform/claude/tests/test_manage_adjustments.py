@@ -93,6 +93,26 @@ def test_lines_written_by_hand_are_listed_and_can_be_removed(memory):
     assert "<!-- my notes" in file.read_text(encoding="utf-8")
 
 
+def test_a_numbered_list_written_by_hand_is_listed_once_and_not_saved_again(memory):
+    file = memory / "customized-intj.md"
+    file.write_text("## Your personal adjustments\n\n1. No emojis\n2) Lead with the conclusion\n"
+                    "3. 1.5x line spacing in tables\n", encoding="utf-8")
+    ok, text = list_adjustments("intj")
+    # Before, these were listed as "1. 1. No emojis"
+    assert text.splitlines()[1:] == ["1. No emojis", "2. Lead with the conclusion",
+                                     "3. 1.5x line spacing in tables"]
+
+    before = file.read_text(encoding="utf-8")
+    for summary in ("No emojis", "lead with the conclusion."):
+        ok, msg = append_to_customized("intj", summary)
+        assert ok and "already saved" in msg, summary
+    assert file.read_text(encoding="utf-8") == before
+
+    ok, text = remove_adjustment("intj", 2)
+    assert ok and text.startswith("Removed: Lead with the conclusion\n")
+    assert "Lead with the conclusion" not in file.read_text(encoding="utf-8")
+
+
 def test_the_tools_are_offered_and_work_through_call_tool(memory):
     names = {t.name for t in asyncio.run(mcp_server.list_tools())}
     assert {"list_adjustments", "remove_adjustment"} <= names

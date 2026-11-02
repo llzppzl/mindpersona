@@ -186,8 +186,11 @@ MBTI_TYPES = ["intj", "intp", "infj", "infp", "istj", "isfj", "istp", "isfp",
 # input validation error, though the code reads any case
 TYPE_SCHEMA_VALUES = MBTI_TYPES + [t.upper() for t in MBTI_TYPES]
 MAX_SUMMARY_CHARS = 300
+# The list marker that starts a saved line: a bullet ("- ", "* ", "+ ") or, in a list written by
+# hand, a number ("1. ", "2) ")
+LIST_MARKER = r"(?:[-*+]\s*|\d+[.)]\s+)"
 # Prefix of a saved entry: "- [2026-04-15 12:34] ", or a hand-written "- （2026-04-04）"
-ENTRY_PREFIX = re.compile(r"^[-*+]\s*(\[[^\]]*\]|（[^）]*）|\([^)]*\))?\s*")
+ENTRY_PREFIX = re.compile(rf"^{LIST_MARKER}(\[[^\]]*\]|（[^）]*）|\([^)]*\))?\s*")
 
 
 def entry_key(text: str) -> str:
@@ -256,8 +259,11 @@ def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
 
 
 def entry_text(line: str) -> str:
-    """A saved line without its bullet ("- ", "* " or "+ ")"""
-    return re.sub(r"^[-*+]\s*", "", line.strip())
+    """A saved line without its bullet ("- ", "* " or "+ ") or number ("1. ").
+
+    Before, a number was kept, so a list written by hand as "1. No emojis" was listed as
+    "1. 1. No emojis", and saving "No emojis" again added it a second time."""
+    return re.sub(rf"^{LIST_MARKER}", "", line.strip())
 
 
 def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
