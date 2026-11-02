@@ -242,15 +242,24 @@ def is_adjustments_header(line: str) -> bool:
     return any(words == " ".join(h.split()).casefold() for h in ADJUSTMENTS_HEADERS)
 
 
-def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
-    """The index of the adjustments heading (English or old) and of the saved entries under it:
-    every line with text up to the next heading, except comment lines and the "### ..." headings
-    that group entries. (None, []) if there is no such heading.
+def _indent(line: str) -> int:
+    return len(line) - len(line.lstrip())
+
+
+def _section_entries(lines: list[str]) -> tuple[Optional[int], list[list[int]]]:
+    """The index of the adjustments heading (English or old) and the saved entries under it, each
+    as the indexes of its lines: every line with text up to the next heading, except comment lines
+    and the "### ..." headings that group entries. A line indented more than the entry above it
+    (the rest of a long entry, or a sub-bullet) belongs to that entry. (None, []) if there is no
+    such heading.
 
     Before, only "- ..." lines counted. extract_adjustments loads every line of the section, so a
     line written by hand as "* No emojis" or without a bullet steered the model, while
     list_adjustments said there was nothing saved and remove_adjustment could not delete it. The
-    same went for a line such as "#nofluff always", which was taken for a heading."""
+    same went for a line such as "#nofluff always", which was taken for a heading.
+
+    Each line was its own entry, so an entry written by hand over two lines was listed as two, and
+    removing it left its indented second line behind, still loaded with the persona."""
     header = next((i for i, line in enumerate(lines) if is_adjustments_header(line)), None)
     if header is None:
         return None, []
@@ -258,8 +267,19 @@ def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
     section = "".join(line if line.endswith("\n") else line + "\n" for line in lines[header + 1:section_end])
     # Blank out the comments that extract_adjustments removes, keeping the line count
     section = COMMENT_BLOCK.sub(lambda m: "\n" * m.group(0).count("\n"), section)
-    return header, [header + 1 + n for n, line in enumerate(section.splitlines())
-                    if line.strip() and not GROUP_HEADING.match(line)]
+    entries: list[list[int]] = []
+    current: Optional[list[int]] = None
+    for n, line in enumerate(section.splitlines()):
+        if not line.strip():
+            continue
+        if GROUP_HEADING.match(line):
+            current = None
+        elif current and _indent(line) > _indent(lines[current[0]]):
+            current.append(header + 1 + n)
+        else:
+            current = [header + 1 + n]
+            entries.append(current)
+    return header, entries
 
 
 def entry_text(line: str) -> str:
@@ -268,6 +288,16 @@ def entry_text(line: str) -> str:
     Before, a number was kept, so a list written by hand as "1. No emojis" was listed as
     "1. 1. No emojis", and saving "No emojis" again added it a second time."""
     return re.sub(rf"^{LIST_MARKER}", "", line.strip())
+
+
+def joined_entry(lines: list[str], entry: list[int]) -> str:
+    """An entry of one or more lines as one line, starting with its bullet: the rest of a long
+    entry follows with a space, a sub-bullet with "; "."""
+    text = lines[entry[0]].strip()
+    for i in entry[1:]:
+        line = lines[i].strip()
+        text += f"; {entry_text(line)}" if re.match(LIST_MARKER, line) else f" {line}"
+    return text
 
 
 def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
@@ -279,15 +309,15 @@ def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
         # No PERSONAL_ADJUSTMENTS_HEADER yet: add it at the end of the file
         return content.rstrip() + f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{new_entry}"
 
-    if any(entry_key(lines[i]) == entry_key(summary) for i in entries):
+    if any(entry_key(joined_entry(lines, e)) == entry_key(summary) for e in entries):
         return None
 
     # New entries go in the ungrouped part, before the first "### ..." heading the user added
     first_group = next((i for i in range(header + 1, _section_end(lines, header))
                         if GROUP_HEADING.match(lines[i])), None)
-    ungrouped = [i for i in entries if first_group is None or i < first_group]
+    ungrouped = [e for e in entries if first_group is None or e[0] < first_group]
     if ungrouped:
-        insert_at = ungrouped[-1] + 1
+        insert_at = ungrouped[-1][-1] + 1
     else:
         insert_at = header + 1
         if insert_at < len(lines) and not lines[insert_at].strip():
@@ -402,7 +432,7 @@ def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, s
         return False, f"Could not save the feedback: {str(e)}"
 
 def _read_entries(mbti_type: str):
-    """(lines, entry indexes, file, error) for a type's saved adjustments"""
+    """(lines, entries as their line indexes, file, error) for a type's saved adjustments"""
     mbti_lower = normalize_mbti_type(mbti_type)
     if not mbti_lower:
         return None, [], None, f"Unknown MBTI type: {mbti_type}. Valid types: {', '.join(MBTI_TYPES)}"
@@ -423,7 +453,7 @@ def list_adjustments(mbti_type: str) -> tuple[bool, str]:
         return False, error
     if not entries:
         return True, f"No saved adjustments for {mbti_type.upper()}."
-    numbered = "\n".join(f"{n}. {entry_text(lines[i])}" for n, i in enumerate(entries, 1))
+    numbered = "\n".join(f"{n}. {entry_text(joined_entry(lines, e))}" for n, e in enumerate(entries, 1))
     return True, f"Saved adjustments for {mbti_type.upper()}:\n{numbered}"
 
 
@@ -453,8 +483,10 @@ def _remove_entry(mbti_type: str, number) -> tuple[bool, str]:
     if not 1 <= number <= len(entries):
         return False, (f"There is no adjustment {number} for {mbti_type.upper()}; "
                        f"it has {len(entries)}." if entries else f"No saved adjustments for {mbti_type.upper()}.")
-    removed = entry_text(lines[entries[number - 1]])
-    del lines[entries[number - 1]]
+    entry = entries[number - 1]
+    removed = entry_text(joined_entry(lines, entry))
+    for i in reversed(entry):
+        del lines[i]
     try:
         write_safely(customized_file, "".join(lines))
     except OSError as e:

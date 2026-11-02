@@ -113,6 +113,33 @@ def test_a_numbered_list_written_by_hand_is_listed_once_and_not_saved_again(memo
     assert "Lead with the conclusion" not in file.read_text(encoding="utf-8")
 
 
+def test_an_entry_written_over_several_lines_is_one_adjustment(memory):
+    file = memory / "customized-intj.md"
+    file.write_text("## Your personal adjustments\n\n- Keep answers short\n  unless I ask for detail\n"
+                    "- Use tables\n  - for comparisons\n\n  - for schedules\n### Tone\n  No emojis\n"
+                    "Answer in British English\n", encoding="utf-8")
+    ok, text = list_adjustments("intj")
+    # Before, each line was listed as its own adjustment
+    assert text.splitlines()[1:] == ["1. Keep answers short unless I ask for detail",
+                                     "2. Use tables; for comparisons; for schedules",
+                                     "3. No emojis", "4. Answer in British English"]
+
+    # Removing it leaves none of its lines behind
+    ok, text = remove_adjustment("intj", 1)
+    assert ok and text.startswith("Removed: Keep answers short unless I ask for detail\n")
+    content = file.read_text(encoding="utf-8")
+    assert "Keep answers short" not in content and "unless I ask" not in content
+    assert list_adjustments("intj")[1].splitlines()[1] == "1. Use tables; for comparisons; for schedules"
+
+    # A new one goes after the whole entry, not between its lines
+    ok, msg = append_to_customized("intj", "Lead with the conclusion")
+    assert msg == "Feedback saved"
+    content = file.read_text(encoding="utf-8")
+    assert content.index("for schedules") < content.index("Lead with the conclusion") < content.index("### Tone")
+    ok, msg = append_to_customized("intj", "use tables; for comparisons; for schedules")
+    assert "already saved" in msg
+
+
 def test_the_tools_are_offered_and_work_through_call_tool(memory):
     names = {t.name for t in asyncio.run(mcp_server.list_tools())}
     assert {"list_adjustments", "remove_adjustment"} <= names
