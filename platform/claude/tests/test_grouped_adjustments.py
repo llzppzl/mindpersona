@@ -98,3 +98,16 @@ def test_a_new_adjustment_with_only_groups_goes_under_the_heading(memory):
     assert lines[2].endswith("Be brief")
     assert lines[3] == "### Tone"
     assert "Be gentle" in persona()
+
+
+@pytest.mark.parametrize("heading", ["## Your Personal Adjustments", "##  your personal adjustments ##",
+                                     "## YOUR PERSONAL ADJUSTMENTS  "])
+def test_a_heading_written_by_hand_in_another_case_is_found(memory, heading):
+    # Before: nothing under it was loaded or listed, and a save added a second heading
+    (memory / "customized-intj.md").write_text(f"{heading}\n\n- No emojis\n", encoding="utf-8")
+    assert "- No emojis" in persona()
+    assert list_adjustments("intj") == (True, "Saved adjustments for INTJ:\n1. No emojis")
+    assert append_to_customized("intj", "Be brief")[0]
+    text = saved(memory)
+    assert text.casefold().count("your personal adjustments") == 1
+    assert text.index("No emojis") < text.index("Be brief")

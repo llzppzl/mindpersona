@@ -225,6 +225,15 @@ def _section_end(lines: list[str], header: int) -> int:
     return next((i for i in range(header + 1, len(lines)) if SECTION_HEADING.match(lines[i])), len(lines))
 
 
+def is_adjustments_header(line: str) -> bool:
+    """Whether line is the adjustments heading, also as written by hand: in any case, with extra
+    spaces or with a closing "#". Before, only the exact text counted, so the adjustments under a
+    hand-written "## Your Personal Adjustments" were not loaded or listed, and the next save added a
+    second heading at the end of the file."""
+    words = " ".join(line.strip().rstrip("#").split()).casefold()
+    return any(words == " ".join(h.split()).casefold() for h in ADJUSTMENTS_HEADERS)
+
+
 def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
     """The index of the adjustments heading (English or old) and of the saved entries under it:
     every line with text up to the next heading, except comment lines and the "### ..." headings
@@ -234,7 +243,7 @@ def _section_entries(lines: list[str]) -> tuple[Optional[int], list[int]]:
     line written by hand as "* No emojis" or without a bullet steered the model, while
     list_adjustments said there was nothing saved and remove_adjustment could not delete it. The
     same went for a line such as "#nofluff always", which was taken for a heading."""
-    header = next((i for i, line in enumerate(lines) if line.strip() in ADJUSTMENTS_HEADERS), None)
+    header = next((i for i, line in enumerate(lines) if is_adjustments_header(line)), None)
     if header is None:
         return None, []
     section_end = _section_end(lines, header)
