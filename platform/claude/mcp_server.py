@@ -210,8 +210,12 @@ def normalize_mbti_type(mbti_type: str) -> Optional[str]:
 
 def clean_summary(feedback_summary: str) -> str:
     """Keep it on one line: one line is one adjustment. A line break would start a new heading or
-    paragraph in the file, which is then loaded as part of the persona prompt."""
-    return " ".join((feedback_summary or "").split())
+    paragraph in the file, which is then loaded as part of the persona prompt.
+
+    A list marker the model put in front ("- Use tables") is dropped. Before, it was saved as
+    "- [time] - Use tables", and the same summary was saved again every time, because the saved
+    line still said "- Use tables" after its own bullet and time were taken off."""
+    return re.sub(r"^(?:[-*+]|\d+[.)])\s+", "", " ".join((feedback_summary or "").split()))
 
 
 # A heading that ends the adjustments section: "# ..." or "## ...". A "### ..." heading that the
