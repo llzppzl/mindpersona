@@ -135,11 +135,8 @@ def extract_adjustments(customized: str) -> str:
     go after the last one. Then every "<!--" ... "-->" was removed, so an entry containing "<!--"
     lost its end and hid every entry after it up to the closing comment."""
     lines = customized.splitlines()
-    header, _ = _section_entries(lines)
-    if header is None:
-        return ""
-    end = _section_end(lines, header)
-    section = COMMENT_BLOCK.sub("", "\n".join(lines[header + 1:end]))
+    section = "\n\n".join(COMMENT_BLOCK.sub("", "\n".join(lines[header + 1:end]))
+                          for header, end in _sections(lines))
     # The removed comments leave blank lines behind: keep at most one between two lines
     return re.sub(r"\n\s*\n", "\n\n", section).strip()
 
@@ -242,12 +239,23 @@ def is_adjustments_header(line: str) -> bool:
     return any(words == " ".join(h.split()).casefold() for h in ADJUSTMENTS_HEADERS)
 
 
+def _sections(lines: list[str]) -> list[tuple[int, int]]:
+    """(heading index, end index) of every adjustments section, in file order.
+
+    A file can have more than one: older versions added a second heading at the end when they
+    missed the first (written by hand in another case, or behind a byte order mark). Before, only
+    the first was read once that was fixed, so everything saved under the second one stopped being
+    loaded or listed, and was saved again under the first."""
+    return [(i, _section_end(lines, i)) for i, line in enumerate(lines) if is_adjustments_header(line)]
+
+
 def _indent(line: str) -> int:
     return len(line) - len(line.lstrip())
 
 
 def _section_entries(lines: list[str]) -> tuple[Optional[int], list[list[int]]]:
-    """The index of the adjustments heading (English or old) and the saved entries under it, each
+    """The index of the first adjustments heading (English or old) and the saved entries under
+    every such heading (see _sections), each
     as the indexes of its lines: every line with text up to the next heading, except comment lines
     and the "### ..." headings that group entries. A line indented more than the entry above it
     (the rest of a long entry, or a sub-bullet) belongs to that entry. (None, []) if there is no
@@ -260,26 +268,26 @@ def _section_entries(lines: list[str]) -> tuple[Optional[int], list[list[int]]]:
 
     Each line was its own entry, so an entry written by hand over two lines was listed as two, and
     removing it left its indented second line behind, still loaded with the persona."""
-    header = next((i for i, line in enumerate(lines) if is_adjustments_header(line)), None)
-    if header is None:
+    sections = _sections(lines)
+    if not sections:
         return None, []
-    section_end = _section_end(lines, header)
-    section = "".join(line if line.endswith("\n") else line + "\n" for line in lines[header + 1:section_end])
-    # Blank out the comments that extract_adjustments removes, keeping the line count
-    section = COMMENT_BLOCK.sub(lambda m: "\n" * m.group(0).count("\n"), section)
     entries: list[list[int]] = []
-    current: Optional[list[int]] = None
-    for n, line in enumerate(section.splitlines()):
-        if not line.strip():
-            continue
-        if GROUP_HEADING.match(line):
-            current = None
-        elif current and _indent(line) > _indent(lines[current[0]]):
-            current.append(header + 1 + n)
-        else:
-            current = [header + 1 + n]
-            entries.append(current)
-    return header, entries
+    for header, section_end in sections:
+        section = "".join(line if line.endswith("\n") else line + "\n" for line in lines[header + 1:section_end])
+        # Blank out the comments that extract_adjustments removes, keeping the line count
+        section = COMMENT_BLOCK.sub(lambda m: "\n" * m.group(0).count("\n"), section)
+        current: Optional[list[int]] = None
+        for n, line in enumerate(section.splitlines()):
+            if not line.strip():
+                continue
+            if GROUP_HEADING.match(line):
+                current = None
+            elif current and _indent(line) > _indent(lines[current[0]]):
+                current.append(header + 1 + n)
+            else:
+                current = [header + 1 + n]
+                entries.append(current)
+    return sections[0][0], entries
 
 
 def entry_text(line: str) -> str:
@@ -312,10 +320,11 @@ def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
     if any(entry_key(joined_entry(lines, e)) == entry_key(summary) for e in entries):
         return None
 
-    # New entries go in the ungrouped part, before the first "### ..." heading the user added
-    first_group = next((i for i in range(header + 1, _section_end(lines, header))
-                        if GROUP_HEADING.match(lines[i])), None)
-    ungrouped = [e for e in entries if first_group is None or e[0] < first_group]
+    # New entries go in the ungrouped part of the first section, before the first "### ..." heading
+    # the user added
+    first_end = _section_end(lines, header)
+    first_group = next((i for i in range(header + 1, first_end) if GROUP_HEADING.match(lines[i])), first_end)
+    ungrouped = [e for e in entries if e[0] < first_group]
     if ungrouped:
         insert_at = ungrouped[-1][-1] + 1
     else:
