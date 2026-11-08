@@ -68,6 +68,37 @@ def test_server_starts_and_serves_prompts_and_tools(tmp_path, monkeypatch):
     assert "update_mbti_memory" in {t.name for t in tools}
 
 
+def test_an_unknown_prompt_is_an_invalid_params_error(tmp_path):
+    """The MCP spec answers an unknown prompt name with "Invalid params" (-32602). Before, the error
+    had code 0, and on mcp 2.x the server also wrote its whole traceback to stderr, which Claude Code
+    shows in its MCP logs."""
+    errlog_path = tmp_path / "stderr.txt"
+
+    async def main():
+        params = StdioServerParameters(command=sys.executable, args=[str(SERVER)])
+        with open(errlog_path, "w", encoding="utf-8") as errlog:
+            async with stdio_client(params, errlog=errlog) as (read, write):
+                async with ClientSession(read, write) as session:
+                    await session.initialize()
+                    errors = []
+                    for name in ("mbti-xxxx", "hello"):
+                        try:
+                            await session.get_prompt(name)
+                        except Exception as e:  # McpError on mcp 1.x, MCPError on 2.x
+                            errors.append(e)
+                    still_works = await session.get_prompt("mbti-intj")
+                    return errors, still_works
+
+    errors, still_works = asyncio.run(asyncio.wait_for(main(), timeout=60))
+    assert len(errors) == 2
+    for error in errors:
+        code = getattr(getattr(error, "error", None), "code", None) or getattr(error, "code", None)
+        assert code == -32602
+        assert "Unknown prompt:" in str(error) and "mbti-intj" in str(error)
+    assert still_works.messages[0].content.text.startswith("# INTJ")
+    assert "Traceback" not in errlog_path.read_text(encoding="utf-8")
+
+
 def test_tools_take_the_type_in_capitals_and_the_number_as_text(tmp_path):
     """The MCP library checks arguments against the tool schema before call_tool runs. Before, the
     schema listed only lowercase types, so "ESTJ" got "Input validation error" and the model had to

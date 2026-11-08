@@ -510,12 +510,25 @@ def skill_prompt(skill_text: str) -> str:
     return SKILL_COMMENT_LINE.sub("", skill_text).strip()
 
 
+def invalid_params(message: str) -> Exception:
+    """An MCP "Invalid params" error (-32602), which the MCP spec gives for an unknown prompt name,
+    on mcp 1.x or 2.x. Before, a plain ValueError went back with code 0, and mcp 2.x also logged its
+    whole traceback to stderr, which Claude Code shows in its MCP logs as if the server had crashed."""
+    from mcp.types import INVALID_PARAMS, ErrorData
+    try:
+        from mcp.shared.exceptions import MCPError  # mcp 2.x
+    except ImportError:
+        from mcp.shared.exceptions import McpError  # mcp 1.x
+        return McpError(ErrorData(code=INVALID_PARAMS, message=message))
+    return MCPError(INVALID_PARAMS, message)
+
+
 async def get_prompt(name: str, arguments: Optional[dict] = None) -> GetPromptResult:
     """Return the persona prompt when the user picks /mbti-<type>"""
     # The MBTI type from the prompt name
     mbti_lower = normalize_mbti_type(name.removeprefix("mbti-"))
     if not mbti_lower:
-        raise ValueError(f"Unknown prompt: {name}. Available: {', '.join('mbti-' + t for t in MBTI_TYPES)}")
+        raise invalid_params(f"Unknown prompt: {name}. Available: {', '.join('mbti-' + t for t in MBTI_TYPES)}")
     mbti_type = mbti_lower.upper()
 
     # The persona itself
