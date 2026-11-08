@@ -4,6 +4,7 @@ Nothing is written to memory/: the tests that save adjustments use a temporary f
 """
 import asyncio
 import os
+import re
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -14,6 +15,27 @@ from mcp.client.stdio import stdio_client
 from .mcp_fields import field
 
 SERVER = Path(__file__).resolve().parent.parent / "mcp_server.py"
+PYPROJECT = SERVER.parent.parent.parent / "pyproject.toml"
+
+
+def pyproject_version():
+    return re.search(r'^version = "(.+)"$', PYPROJECT.read_text(encoding="utf-8"), re.MULTILINE).group(1)
+
+
+def test_server_version_comes_from_the_installed_package_without_a_pyproject(tmp_path, monkeypatch):
+    """An installed copy has no pyproject.toml next to it, so the version comes from its metadata."""
+    sys.path.insert(0, str(SERVER.parent))
+    import mcp_server
+    from importlib import metadata
+
+    monkeypatch.setattr(metadata, "version", lambda name: {"mindpersona": "9.8.7"}[name])
+    assert mcp_server.server_version(tmp_path) == "9.8.7"
+
+    def not_installed(name):
+        raise metadata.PackageNotFoundError(name)
+
+    monkeypatch.setattr(metadata, "version", not_installed)
+    assert mcp_server.server_version(tmp_path) == "unknown"
 
 
 def run_session(scenario, env=None):
@@ -39,6 +61,8 @@ def test_server_starts_and_serves_prompts_and_tools(tmp_path, monkeypatch):
     init, prompts, intj, tools = run_session(scenario)
 
     assert field(init, "serverInfo")["name"] == "mindpersona"
+    # MindPersona's own version: before, mcp 1.x sent its version ("1.30.0") and mcp 2.x an empty one
+    assert field(init, "serverInfo")["version"] == pyproject_version()
     assert len([p for p in prompts if p.name.startswith("mbti-")]) == 16
     assert intj.messages[0].content.text.startswith("# INTJ")
     assert "update_mbti_memory" in {t.name for t in tools}
@@ -96,11 +120,12 @@ def test_server_runs_on_mcp_2_style_handlers(tmp_path, monkeypatch):
     monkeypatch.setattr(mcp_server, "MEMORY_DIR", tmp_path)
 
     class Mcp2Server:
-        def __init__(self, name, **handlers):
-            self.name, self.handlers = name, handlers
+        def __init__(self, name, *, version, **handlers):
+            self.name, self.version, self.handlers = name, version, handlers
 
     server = mcp_server.build_server(Mcp2Server)
     assert server.name == "mindpersona"
+    assert server.version == pyproject_version()
     assert set(server.handlers) == {"on_list_prompts", "on_get_prompt", "on_list_tools", "on_call_tool"}
 
     def handle(handler, **params):

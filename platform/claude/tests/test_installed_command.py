@@ -7,12 +7,15 @@ point, memory saved inside site-packages) fails the build.
 """
 import asyncio
 import os
+import re
 import shlex
+from pathlib import Path
 
 import pytest
 
 from .mcp_fields import field
 
+PYPROJECT = Path(__file__).resolve().parents[3] / "pyproject.toml"
 COMMAND = os.environ.get("MINDPERSONA_INSTALLED_CMD")
 pytestmark = pytest.mark.skipif(not COMMAND, reason="set MINDPERSONA_INSTALLED_CMD to test an installed command")
 
@@ -42,10 +45,13 @@ def test_installed_server_serves_personas_and_keeps_feedback_in_home(tmp_path):
         intj = (await session.get_prompt("mbti-intj")).messages[0].content.text
         saved = await session.call_tool("update_mbti_memory",
                                         {"mbti_type": "intj", "feedback_summary": "Lead with the conclusion"})
-        return len(prompts), tools, intj, saved
+        return len(prompts), tools, intj, saved, field(init, "serverInfo")["version"]
 
-    count, tools, intj, saved = run(tmp_path, first)
+    count, tools, intj, saved, version = run(tmp_path, first)
     assert count == 16
+    # The installed package's version, not mcp's (or an empty one)
+    assert re.fullmatch(r"\d+\.\d+\.\d+", version), version
+    assert version == re.search(r'^version = "(.+)"$', PYPROJECT.read_text(encoding="utf-8"), re.MULTILINE).group(1)
     assert {"update_mbti_memory", "load_persona", "list_adjustments", "remove_adjustment"} <= tools
     assert intj.startswith("# INTJ")
     assert not field(saved, "isError")

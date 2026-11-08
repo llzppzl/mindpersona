@@ -697,14 +697,31 @@ async def call_tool(name: str, arguments: Optional[dict]) -> list[TextContent]:
         raise ToolError(f"Unknown tool: {name}")
 
 
+def server_version(root: Path = Path(__file__).resolve().parent.parent.parent) -> str:
+    """MindPersona's version, for the serverInfo that clients show: from pyproject.toml in a clone,
+    or from the installed package. Before, none was given, so mcp 1.x sent its own version (such as
+    "1.30.0") as MindPersona's, and mcp 2.x sent an empty one."""
+    pyproject = root / "pyproject.toml"
+    if pyproject.is_file():
+        match = re.search(r'^version\s*=\s*"([^"]+)"', pyproject.read_text(encoding="utf-8"), re.MULTILINE)
+        if match:
+            return match.group(1)
+    from importlib import metadata
+    try:
+        return metadata.version("mindpersona")
+    except metadata.PackageNotFoundError:
+        return "unknown"
+
+
 def build_server(server_cls=Server):
     """The MCP server, with the handlers above, on mcp 1.x or 2.x.
 
     mcp 1.x registers handlers with decorators (@server.list_prompts() ...); mcp 2.x removed them and
     takes the handlers in the Server constructor. Before, the server only ran on 1.x, so it had to
     pin mcp<2 and could not be installed next to anything that needs mcp 2."""
+    version = server_version()
     if hasattr(server_cls, "list_prompts"):
-        mcp_server = server_cls(SERVER_NAME)
+        mcp_server = server_cls(SERVER_NAME, version=version)
         mcp_server.list_prompts()(list_prompts)
         mcp_server.get_prompt()(get_prompt)
         mcp_server.list_tools()(list_tools)
@@ -730,7 +747,7 @@ def build_server(server_cls=Server):
             return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
         return CallToolResult(content=content)
 
-    return server_cls(SERVER_NAME, on_list_prompts=on_list_prompts, on_get_prompt=on_get_prompt,
+    return server_cls(SERVER_NAME, version=version, on_list_prompts=on_list_prompts, on_get_prompt=on_get_prompt,
                       on_list_tools=on_list_tools, on_call_tool=on_call_tool)
 
 
