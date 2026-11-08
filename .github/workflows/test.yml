@@ -16,11 +16,12 @@ jobs:
           - python: "3.11"
           - python: "3.12"
           - python: "3.13"
-          # The oldest allowed mcp, and the newest 1.x (the rows above get the newest mcp, 2.x)
+          # The oldest allowed mcp, and the newest 1.x (the rows above get the newest mcp, 2.x).
+          # The value goes into the shell unquoted, so no "<" or ">": "~=1.22" is ">=1.22, ==1.*"
           - python: "3.10"
             mcp: "mcp==1.22.0"
           - python: "3.12"
-            mcp: "mcp<2"
+            mcp: "mcp~=1.22"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
