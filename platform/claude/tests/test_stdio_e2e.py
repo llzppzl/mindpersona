@@ -141,10 +141,49 @@ def test_server_runs_on_mcp_2_style_handlers(tmp_path, monkeypatch):
 
     assert call("update_mbti_memory", {"mbti_type": "INTJ", "feedback_summary": "Lead with the verdict"}) == (
         False, f"✅ Feedback saved\n\nFile: {tmp_path / 'customized-intj.md'}")
-    # A failed call, and arguments the 2.x low-level server does not check against the schema,
-    # come back as failed results instead of failing the request
+    # A failed call, and arguments that do not match the schema, come back as failed results instead
+    # of failing the request
     assert call("remove_adjustment", {"mbti_type": "intj", "number": 5}) == (
         True, "❌ There is no adjustment 5 for INTJ; it has 1.")
-    assert call("update_mbti_memory", None) == (True, "❌ mbti_type and feedback_summary are both required")
+    assert call("update_mbti_memory", None) == (True, "Input validation error: 'mbti_type' is a required property")
     failed, text = call("list_adjustments", {"mbti_type": 5})
-    assert failed and text.startswith("❌ Unknown MBTI type: 5")
+    assert failed and text.startswith("Input validation error: 5 is not ")
+    assert call("no_such_tool", {}) == (True, "❌ Unknown tool: no_such_tool")
+
+
+def test_mcp_2_checks_tool_arguments_against_the_schema(tmp_path, monkeypatch):
+    """mcp 1.x checks tool arguments against the schema; mcp 2.x's low-level server does not. Before,
+    on mcp 2 "number": 2.5 removed adjustment 2, true removed adjustment 1, and a feedback_summary
+    sent as a list was saved as "['a', 'b']"."""
+    sys.path.insert(0, str(SERVER.parent))
+    import mcp_server
+
+    monkeypatch.setattr(mcp_server, "MEMORY_DIR", tmp_path)
+
+    class Mcp2Server:
+        def __init__(self, name, *, version, **handlers):
+            self.handlers = handlers
+
+    server = mcp_server.build_server(Mcp2Server)
+
+    def call(name, arguments):
+        result = asyncio.run(server.handlers["on_call_tool"](None, SimpleNamespace(name=name, arguments=arguments)))
+        return field(result, "isError"), result.content[0].text
+
+    assert call("update_mbti_memory", {"mbti_type": "intj", "feedback_summary": "Use tables"})[0] is False
+    assert call("update_mbti_memory", {"mbti_type": "intj", "feedback_summary": "No emojis"})[0] is False
+
+    for arguments in ({"mbti_type": "intj", "feedback_summary": ["a", "b"]},
+                      {"mbti_type": "intj", "feedback_summary": 42}):
+        failed, text = call("update_mbti_memory", arguments)
+        assert failed and text.startswith("Input validation error:"), text
+    for number in (2.5, True, 0):
+        failed, text = call("remove_adjustment", {"mbti_type": "intj", "number": number})
+        assert failed and text.startswith("Input validation error:"), text
+
+    failed, text = call("list_adjustments", {"mbti_type": "intj"})
+    assert not failed
+    assert "1. " in text and "Use tables" in text and "2. " in text and "No emojis" in text
+    assert "3. " not in text
+    # What the schema allows still works: the type in capitals, the number as text
+    assert call("remove_adjustment", {"mbti_type": "INTJ", "number": "2"})[1].startswith("Removed: ")

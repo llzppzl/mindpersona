@@ -737,11 +737,22 @@ def build_server(server_cls=Server):
     async def on_list_tools(ctx, params):
         return ListToolsResult(tools=await list_tools())
 
+    # jsonschema comes with mcp (1.x and 2.x both depend on it)
+    import jsonschema
+
     async def on_call_tool(ctx, params):
-        # mcp 1.x turns an exception into a result with isError set; mcp 2.x leaves that to the server.
-        # Its low-level server does not check arguments against the tool schema either, so a wrong
-        # argument type also ends up here instead of failing the request
+        # mcp 1.x checks the arguments against the tool's schema before call_tool runs; mcp 2.x's
+        # low-level server does not, so it is done here, with the same message. Before, a wrong type
+        # went through: "number": 2.5 or true removed adjustment 2 or 1, and a feedback_summary sent as
+        # a list or a number was saved as its Python text, e.g. "['a', 'b']".
+        # mcp 1.x also turns an exception into a result with isError set; mcp 2.x leaves that to the server
         try:
+            schemas = {t.name: t.model_dump(by_alias=True)["inputSchema"] for t in await list_tools()}
+            if params.name in schemas:
+                try:
+                    jsonschema.validate(params.arguments or {}, schemas[params.name])
+                except jsonschema.ValidationError as e:
+                    raise ValueError(f"Input validation error: {e.message}") from None
             content = await call_tool(params.name, params.arguments)
         except Exception as e:
             return CallToolResult(content=[TextContent(type="text", text=str(e))], isError=True)
