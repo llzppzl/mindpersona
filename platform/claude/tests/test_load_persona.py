@@ -11,6 +11,8 @@ sys.path.insert(0, str(Path(__file__).parent.parent))
 import mcp_server
 from mcp_server import call_tool, get_prompt, list_tools, LOAD_PERSONA_TYPES
 
+from .mcp_fields import field
+
 
 @pytest.fixture
 def temp_memory_dir():
@@ -30,7 +32,7 @@ def test_tool_is_listed_with_every_type():
     tools = {t.name: t for t in run(list_tools())}
     tool = tools["load_persona"]
     # In both cases, since users (and so models) write "ESTJ" as often as "estj"
-    assert sorted(tool.inputSchema["properties"]["mbti_type"]["enum"]) == sorted(
+    assert sorted(field(tool, "inputSchema")["properties"]["mbti_type"]["enum"]) == sorted(
         LOAD_PERSONA_TYPES + [t.upper() for t in LOAD_PERSONA_TYPES])
     assert len(LOAD_PERSONA_TYPES) == 16
     # The description says what each type is for, so the model can pick one

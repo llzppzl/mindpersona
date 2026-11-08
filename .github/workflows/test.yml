@@ -16,9 +16,11 @@ jobs:
           - python: "3.11"
           - python: "3.12"
           - python: "3.13"
-          # The oldest allowed mcp
+          # The oldest allowed mcp, and the newest 1.x (the rows above get the newest mcp, 2.x)
           - python: "3.10"
             mcp: "mcp==1.22.0"
+          - python: "3.12"
+            mcp: "mcp<2"
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,6 +48,6 @@ jobs:
           python -m venv "$RUNNER_TEMP/mindpersona"
           "$RUNNER_TEMP/mindpersona/bin/pip" install .
       - name: Install the test client
-        run: pip install pytest "mcp>=1.22,<2"
+        run: pip install pytest "mcp>=1.22,<3"
       - name: Test the installed command
         run: MINDPERSONA_INSTALLED_CMD="$RUNNER_TEMP/mindpersona/bin/mindpersona" python -m pytest -v platform/claude/tests/test_installed_command.py

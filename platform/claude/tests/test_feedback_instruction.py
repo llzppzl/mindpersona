@@ -7,6 +7,8 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 import mcp_server
 
+from .mcp_fields import field
+
 CJK = re.compile(r"[\u4e00-\u9fff]")
 
 
@@ -53,6 +55,6 @@ def test_instruction_and_descriptions_are_in_english():
     assert not CJK.search(mcp_server.TRIGGER_INSTRUCTION)
     tool = asyncio.run(mcp_server.list_tools())[0]
     assert not CJK.search(tool.description)
-    assert not CJK.search(tool.inputSchema["properties"]["feedback_summary"]["description"])
+    assert not CJK.search(field(tool, "inputSchema")["properties"]["feedback_summary"]["description"])
     for prompt in asyncio.run(mcp_server.list_prompts()):
         assert not CJK.search(prompt.description)

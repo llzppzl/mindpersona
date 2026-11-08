@@ -11,6 +11,8 @@ import shlex
 
 import pytest
 
+from .mcp_fields import field
+
 COMMAND = os.environ.get("MINDPERSONA_INSTALLED_CMD")
 pytestmark = pytest.mark.skipif(not COMMAND, reason="set MINDPERSONA_INSTALLED_CMD to test an installed command")
 
@@ -46,7 +48,7 @@ def test_installed_server_serves_personas_and_keeps_feedback_in_home(tmp_path):
     assert count == 16
     assert {"update_mbti_memory", "load_persona", "list_adjustments", "remove_adjustment"} <= tools
     assert intj.startswith("# INTJ")
-    assert not saved.isError
+    assert not field(saved, "isError")
     assert (tmp_path / ".mindpersona" / "memory" / "customized-intj.md").is_file()
 
     async def second(session, init):
