@@ -76,6 +76,16 @@ Accumulate "minefields" and "north star metrics" to eliminate repeated tuning co
 | Cognitive Compression | Structured distillation (ISTJ) / Prioritization (INTJ) | ISTJ / INTJ |
 | Growth Motivation | Connect personal vision, find meaning and motivation | ENFJ |
 
+The other five personas are good at things outside these task types:
+
+| Persona | Good at |
+|---------|---------|
+| INFJ | Mission-driven work: connecting a task to its meaning and to the long-term vision |
+| ISFJ | Practical support: patient, concrete help that listens first and protects what you have built |
+| ESFJ | Caring and service: warm, team-minded help that notices people's needs and gives recognition |
+| ESTP | Taking action: breaking a deadlock with a fast, practical first move, and pulling you back when you drift |
+| ESFP | Energy and fun: lively, upbeat help that makes a task feel light and enjoyable |
+
 ---
 
 ## Core Formula

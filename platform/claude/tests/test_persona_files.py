@@ -112,6 +112,15 @@ def test_task_index_is_read():
     assert index["option analysis"] == {"intj", "intp"}
 
 
+def test_task_index_names_every_persona():
+    # INFJ, ISFJ, ESFJ, ESTP and ESFP were in no row, so a reader picking from the README never
+    # learned what they are for (load_persona's guide lists all 16)
+    readme = (REPO / "readme.md").read_text(encoding="utf-8")
+    section = re.search(r"## Task Index\n(.*?)\n---", readme, re.DOTALL).group(1)
+    named = {t.lower() for t in re.findall(r"\b([EI][SN][TF][JP])\b", section)}
+    assert named == set(TYPES), f"not in the Task Index: {sorted(set(TYPES) - named)}"
+
+
 def test_best_for_tables_match_the_task_index():
     # A persona that claims a task the README recommends someone else for confuses the choice
     # (load_persona and the README both use the Task Index)
