@@ -73,6 +73,18 @@ def test_enfp_does_not_close_every_idea_with_a_plan():
     assert re.search(r"^- Once the ideas have run their course", architecture, re.MULTILINE)
 
 
+def test_estp_pulls_the_user_back_while_doing():
+    # The README recommends ESTP for "iterate while doing" users because it adjusts course when they
+    # are stuck and pulls them back when they drift (the P-type guardrail role), but the persona only
+    # said "adjust while doing" and never told the model to do either
+    text = (SKILLS / "mbti-estp.md").read_text(encoding="utf-8")
+    architecture = re.search(r"## Architecture layer\n(.*?)\n## ", text, re.DOTALL).group(1)
+    guardrail = re.search(r"^- Guardrail while doing: (.*)$", architecture, re.MULTILINE)
+    assert guardrail, "mbti-estp.md has no guardrail line"
+    assert "stuck" in guardrail.group(1) and "drifting" in guardrail.group(1)
+    assert "next concrete move" in guardrail.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
