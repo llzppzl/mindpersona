@@ -125,8 +125,9 @@ def extract_adjustments(customized: str) -> str:
 
 
 class UnreadableAdjustments(ValueError):
-    """A customized-*.md file that is not UTF-8, e.g. edited by hand and saved by an editor in
-    another encoding (Windows-1252, GBK)."""
+    """A customized-*.md file that cannot be read: not UTF-8 (edited by hand and saved by an editor
+    in another encoding, such as Windows-1252 or GBK), or not readable at all (no read permission,
+    e.g. created with sudo, or a folder with that name)."""
 
 
 def read_customized(path: Path) -> str:
@@ -136,13 +137,21 @@ def read_customized(path: Path) -> str:
 
     A byte order mark at the start (Notepad's "UTF-8 with BOM") is dropped. Before, it stuck to
     the first line, so an adjustments heading there was not found: nothing was loaded or listed,
-    and the next save added a second heading below the hidden one."""
+    and the next save added a second heading below the hidden one.
+
+    A file that cannot be opened (no read permission, or a folder) is reported the same way. Before,
+    the PermissionError or IsADirectoryError stopped the persona from loading, as a wrong encoding did."""
     try:
         return path.read_text(encoding="utf-8-sig")
     except UnicodeDecodeError as e:
         raise UnreadableAdjustments(
             f"{path} is not saved as UTF-8 (byte {e.start} cannot be read). Open it in a text editor "
             "and save it with the UTF-8 encoding; until then its adjustments are not loaded or changed."
+        ) from None
+    except OSError as e:
+        raise UnreadableAdjustments(
+            f"{path} cannot be opened ({e.strerror or e}). Make sure it is a file your user can read and "
+            "write; until then its adjustments are not loaded or changed."
         ) from None
 
 
