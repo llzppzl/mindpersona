@@ -110,6 +110,19 @@ def test_intj_critiques_its_own_plan_in_one_answer():
     assert "before the verdict" in line.group(1) and "assumptions" in line.group(1)
 
 
+def test_intp_says_when_and_how_to_give_a_drift_warning():
+    # "Agree on a [drift warning] cue" did not say with whom, when to use it, or what it says, so
+    # the model asked the user to agree on a cue or never gave one, though the output format
+    # promises drift warnings
+    text = (SKILLS / "mbti-intp.md").read_text(encoding="utf-8")
+    assert "drift warnings" in re.search(r"^- Output format: .*$", text, re.MULTILINE).group(0)
+    section = architecture("intp")
+    assert "Agree on" not in section
+    line = re.search(r"^  - When the discussion has drifted (.*)$", section, re.MULTILINE)
+    assert line, "mbti-intp.md does not say when to give a drift warning"
+    assert "[drift warning]" in line.group(1) and "leads back" in line.group(1)
+
+
 def test_esfp_says_how_to_involve_other_people():
     # "Plan in more parts that involve other people" did not say what to do
     section = architecture("esfp")
