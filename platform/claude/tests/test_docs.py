@@ -83,6 +83,21 @@ def test_troubleshooting_says_what_the_server_prints_in_a_terminal():
     assert "claude mcp add" in terminal_notice({})
 
 
+def test_readme_says_to_paste_a_copy_that_tells_the_model_to_use_the_persona():
+    # It said to paste a skills/ file into any chat app. A skill only describes a user of the type;
+    # the "Using this persona" part that tells the model to answer that way is added by the server
+    # and the platform copies, so a pasted skill could leave the answers unchanged
+    readme = (REPO / "readme.md").read_text(encoding="utf-8")
+    section = readme.split("### Any chat app", 1)[1].split("\n### ", 1)[0]
+    assert "skprompt.txt" in section
+    assert "Open a file in [`skills/`]" not in section
+    assert "Using this persona" in section
+    skprompt = (REPO / "platform" / "semantic-kernel" / "intj" / "skprompt.txt").read_text(encoding="utf-8")
+    assert "## Using this persona" in skprompt and "<!--" not in skprompt
+    skill = (REPO / "skills" / "mbti-intj.md").read_text(encoding="utf-8")
+    assert "## Using this persona" not in skill
+
+
 def test_claude_setup_guide_names_every_tool_the_user_can_ask_for():
     guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
     for name in ("load_persona", "list_adjustments", "remove_adjustment"):

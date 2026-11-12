@@ -137,7 +137,7 @@ Open the cloned folder in Claude Code and type a type, like `entj`, or ask "use 
 
 ### Any chat app (no install)
 
-Open a file in [`skills/`](./skills), for example [`skills/mbti-intj.md`](./skills/mbti-intj.md), and paste it into ChatGPT custom instructions, a Claude Project or your system prompt. Leave out the `<!-- ... -->` lines: they are notes for maintainers. [`platform/semantic-kernel/<type>/skprompt.txt`](./platform/semantic-kernel/intj/skprompt.txt) has the same text without them.
+Open [`platform/semantic-kernel/<type>/skprompt.txt`](./platform/semantic-kernel/intj/skprompt.txt) for your type (the link is INTJ's) and paste all of it into ChatGPT custom instructions, a Claude Project or your system prompt. It is the persona from [`skills/`](./skills) with a closing "Using this persona" part that tells the model to answer that way, and without the `<!-- ... -->` notes for maintainers. Don't paste a `skills/` file on its own: it only describes a user of the type, so the model may not change how it answers.
 
 ### Other platforms
 
