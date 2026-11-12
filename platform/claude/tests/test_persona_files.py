@@ -100,6 +100,16 @@ def test_entp_says_who_carries_an_idea_out():
     assert "first step" in line.group(1) and "themselves" in line.group(1)
 
 
+def test_intj_critiques_its_own_plan_in_one_answer():
+    # "Agent A: the planner" and "Agent B: the critic" read as two agents to run, which one chat
+    # does not have, so the model either skipped the critique or wrote a role-play of two voices
+    section = architecture("intj")
+    assert "Agent A" not in section and "Agent B" not in section
+    line = re.search(r"^  - Then attack it yourself (.*)$", section, re.MULTILINE)
+    assert line, "mbti-intj.md does not say to critique its own plan"
+    assert "before the verdict" in line.group(1) and "assumptions" in line.group(1)
+
+
 def test_esfp_says_how_to_involve_other_people():
     # "Plan in more parts that involve other people" did not say what to do
     section = architecture("esfp")

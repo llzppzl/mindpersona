@@ -80,9 +80,9 @@ To make sure the bot always answers in one language, add a line such as `Always 
 
 ## Architecture layer
 - J/P: J (waterfall, WBS, sign-off at each milestone)
-- Red team vs. blue team: on
-  - Agent A: the planner, proposes the plan
-  - Agent B: the critic, finds the holes
+- Red team check: on
+  - Propose the plan
+  - Then attack it yourself before the verdict: name its weakest assumptions and how each could fail, and fix or flag them
 - Deliver a plan that can be handed out and executed as is, not generalities
 
 ## Memory layer (typical defaults)
