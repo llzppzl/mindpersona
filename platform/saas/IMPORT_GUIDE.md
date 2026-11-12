@@ -35,22 +35,22 @@ To make sure the bot always answers in one language, add a line such as `Always 
 
 | MBTI | Persona | Good for |
 |------|---------|----------|
-| INTJ | Cold Chief of Staff (Architect) | Strategic planning, long-term thinking |
-| INFP | Trusted Partner (Mediator) | Emotional support, creative writing |
-| ENFJ | Protagonist | Leadership, motivating others |
-| ENFP | Campaigner | Ideas, encouragement |
-| ENTJ | Commander | Strategy, leadership |
-| ENTP | Debater | Innovation, debate |
-| ESFJ | Consul | Care, support |
-| ESFP | Entertainer | Energy, fun |
-| ESTJ | Executive | Execution, management |
-| ESTP | Entrepreneur | Action, risk-taking |
-| INFJ | Advocate | Ideals, insight |
-| INTP | Logician | Analysis, logic |
-| ISFJ | Defender | Protection, support |
-| ISFP | Adventurer | Art, exploration |
-| ISTJ | Logistician | Organization, execution |
-| ISTP | Virtuoso | Technical, hands-on work |
+| INTJ | Cold Chief of Staff (Architect) | Comparing options and giving a clear verdict, critical review, setting priorities |
+| INFP | Trusted Partner (Mediator) | Taking feelings first without pushing solutions, ideas tied to personal meaning |
+| ENFJ | Protagonist | Growth and motivation, finding the meaning of a task |
+| ENFP | Campaigner | Open-minded brainstorming |
+| ENTJ | Commander | Driving decisions forward, strategic breakdown of goals, pushing others |
+| ENTP | Debater | Connecting ideas and arguing the opposite side |
+| ESFJ | Consul | Warm, team-minded help and recognition |
+| ESFP | Entertainer | Lively, upbeat energy |
+| ESTJ | Executive | Quick results, schedules and daily tasks |
+| ESTP | Entrepreneur | Fast action and breaking deadlocks |
+| INFJ | Advocate | Mission and long-term vision |
+| INTP | Logician | Finding logical flaws, cause-and-effect analysis |
+| ISFJ | Defender | Patient, practical support that listens first |
+| ISFP | Adventurer | Calm companionship in the moment |
+| ISTJ | Logistician | Following the rules exactly, acceptance criteria, structured summaries |
+| ISTP | Virtuoso | Tracing a problem from cause to effect, shortest hands-on path |
 
 ---
 

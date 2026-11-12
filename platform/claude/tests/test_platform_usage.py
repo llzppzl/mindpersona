@@ -47,6 +47,18 @@ def test_saas_guide_prompts_say_how_to_use_the_persona(mbti_type):
     assert block.endswith(usage(mbti_type))
 
 
+def test_saas_guide_says_what_each_persona_is_good_for_like_the_server():
+    # Its "Good for" column was written apart from the personas: ISFP was for "Art, exploration" and
+    # INTJ for "Strategic planning, long-term thinking", while the skills and the Task Index make ISFP
+    # calm companionship and INTJ comparing options. A Coze or Dify user picked by that column
+    guide = (REPO / "platform" / "saas" / "IMPORT_GUIDE.md").read_text(encoding="utf-8")
+    table = dict(re.findall(r"^\| ([EI][SN][TF][JP]) \| [^|]+ \| ([^|]+?) \|$", guide, re.MULTILINE))
+    expected = {t: g[0].upper() + g[1:]
+                for t, g in re.findall(r"^- ([A-Z]{4}): (.+)$", mcp_server.PERSONA_GUIDE, re.MULTILINE)}
+    assert len(expected) == 16
+    assert table == expected
+
+
 def test_api_readme_adds_the_same_usage_text():
     readme = (REPO / "platform" / "api" / "README.md").read_text(encoding="utf-8")
     code = readme[readme.index("```python"):]
