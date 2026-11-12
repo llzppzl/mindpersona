@@ -11,11 +11,23 @@ Usage:
 import os
 import re
 import stat
+import sys
 import time
 from contextlib import contextmanager
 from datetime import datetime
 from pathlib import Path
 from typing import Optional
+
+# Checked before mcp is imported. mcp needs Python 3.10, so on an older one pip finds no mcp to
+# install, and the server stopped with "No module named 'mcp'", which reads as if the wrong python
+# was used. macOS's own python3 is 3.9, and it is what `which python3` gives in the clone setup
+if sys.version_info < (3, 10):
+    sys.exit(f"MindPersona needs Python 3.10 or newer, but {sys.executable} is Python "
+             f"{sys.version_info[0]}.{sys.version_info[1]}. Install a newer Python (from python.org or "
+             "with your package manager), install the dependencies with it, and add the server again "
+             "with its full path. Or use the one-command uvx setup, which brings its own Python: "
+             "https://github.com/llzppzl/mindpersona/blob/main/platform/claude/README.md")
+
 from mcp.server import Server
 from mcp.types import (Prompt, GetPromptResult, PromptMessage, Tool, CallToolResult, TextContent,
                        ListPromptsResult, ListToolsResult)

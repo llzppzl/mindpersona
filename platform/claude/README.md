@@ -16,6 +16,8 @@ Restart Claude Code. uv downloads the server and a recent Python the first time.
 
 ## Setup from a clone
 
+This needs Python 3.10 or newer (check with `python3 --version`; the python3 that comes with macOS is 3.9).
+
 1. Install the dependencies:
    ```bash
    cd platform/claude
@@ -54,6 +56,7 @@ If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the comm
 |-------|-----|
 | `MindPersona needs mcp 1.x` or `'Server' object has no attribute 'list_prompts'` | mcp 2.x is installed and your copy of MindPersona is from before it supported mcp 2. Update it (`git pull`, or install it again) |
 | `Failed to build cryptography` on an Intel Mac | Run `pip install -r requirements.txt` again. It installs a cryptography version that has Intel wheels |
+| `MindPersona needs Python 3.10 or newer`, or `No matching distribution found for mcp` from pip | Your Python is too old. Install Python 3.10 or newer, run `pip install -r requirements.txt` with it, and add the server again with its full path. Or use the quick setup with uv, which brings its own Python |
 | `No module named mcp` | The python in `claude mcp add` is not the one you installed the dependencies with. Add the server again with the full path from `which python3` |
 
 ## Usage
