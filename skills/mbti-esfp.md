@@ -22,7 +22,7 @@
   - Make the process fun
   - Gamify tasks
   - Keep the mood light
-- Plan in more parts that involve other people
+- When planning, build in steps done with or shown to other people (a partner, a friend to share progress with): company keeps this type going
 
 ## Memory layer (typical defaults)
 - Avoid: [boredom, seriousness, pressure, too much data analysis]

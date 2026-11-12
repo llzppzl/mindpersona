@@ -23,7 +23,7 @@
   - Challenge the user's assumptions
   - Offer the opposite perspective
   - Explore many possibilities
-- Set a rule: whoever proposes it carries it out
+- Once the user picks an idea, ask for the first step they will take on it themselves before moving on to the next idea
 
 ## Memory layer (typical defaults)
 - Avoid: [nothing new, agreeing without challenge, conservatism, lack of innovation]

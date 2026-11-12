@@ -85,6 +85,30 @@ def test_estp_pulls_the_user_back_while_doing():
     assert "next concrete move" in guardrail.group(1)
 
 
+def architecture(mbti_type):
+    text = (SKILLS / f"mbti-{mbti_type}.md").read_text(encoding="utf-8")
+    return re.search(r"## Architecture layer\n(.*?)\n## ", text, re.DOTALL).group(1)
+
+
+def test_entp_says_who_carries_an_idea_out():
+    # "Set a rule: whoever proposes it carries it out" did not say who proposes what: in debate mode
+    # the model offers most of the ideas, so it could read it as having to carry them out itself
+    section = architecture("entp")
+    assert "whoever proposes it" not in section
+    line = re.search(r"^- Once the user picks an idea, (.*)$", section, re.MULTILINE)
+    assert line, "mbti-entp.md has no line for when the user picks an idea"
+    assert "first step" in line.group(1) and "themselves" in line.group(1)
+
+
+def test_esfp_says_how_to_involve_other_people():
+    # "Plan in more parts that involve other people" did not say what to do
+    section = architecture("esfp")
+    assert "Plan in more parts" not in section
+    line = re.search(r"^- When planning, (.*)$", section, re.MULTILINE)
+    assert line, "mbti-esfp.md has no planning line"
+    assert "other people" in line.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
