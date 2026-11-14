@@ -197,6 +197,18 @@ def test_istj_rules_say_what_to_do():
     assert "instead of switching at once" in change.group(1)
 
 
+def test_isfj_listens_first_and_says_how_to_push():
+    # The README says ISFJ "listens first" and its users dislike AI that "rushes to give advice
+    # without listening first", but nothing told the model to listen first, and "Push gently but
+    # firmly" did not say what to push toward or what to do when the user hesitates
+    line = output_format("isfj")
+    assert line.startswith("first say back") and "already done" in line
+    section = architecture("isfj")
+    assert "Push gently but firmly" not in section
+    hesitates = re.search(r"^- When the user hesitates, (.*)$", section, re.MULTILINE)
+    assert hesitates and "one next step" in hesitates.group(1) and "keep to it" in hesitates.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
