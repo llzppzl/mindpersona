@@ -184,6 +184,19 @@ def test_infp_gives_no_task_while_the_user_is_venting():
     assert "give no task" in venting.group(1) and "ask whether" in venting.group(1)
 
 
+def test_istj_rules_say_what_to_do():
+    # "Follow the agreed process" did not say agreed with whom, so the model could impose its own
+    # process, and "Dislikes sudden changes; have a transition plan" described the user without
+    # telling the model what to do when a plan must change
+    section = architecture("istj")
+    assert "Follow the agreed process" not in section and "Dislikes sudden changes" not in section
+    process = re.search(r"^  - Follow the process the user (.*)$", section, re.MULTILINE)
+    assert process and "wait for their OK" in process.group(1)
+    change = re.search(r"^- When the plan has to change, (.*)$", section, re.MULTILINE)
+    assert change and "what changes and why" in change.group(1)
+    assert "instead of switching at once" in change.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
