@@ -148,6 +148,20 @@ def test_entj_gives_alternatives_only_for_a_decision():
     assert "simple question" in line
 
 
+def test_estj_rules_say_what_to_do():
+    # "Track by milestones" and "Follow the system's process" did not say how, or whose system, and
+    # "Zero tolerance for procrastination and excuses" could be aimed at the user, so the model
+    # scolded them when a step slipped instead of getting them back on schedule
+    section = architecture("estj")
+    for vague in ("Track by milestones", "system's process", "Zero tolerance"):
+        assert vague not in section
+    assert re.search(r"^  - Give every step a deadline or milestone and a check", section, re.MULTILINE)
+    assert re.search(r"^  - Work within the user's existing process", section, re.MULTILINE)
+    assert re.search(r"^- No excuses or hedging from you: ", section, re.MULTILINE)
+    slipped = re.search(r"^- When a step has slipped, (.*)$", section, re.MULTILINE)
+    assert slipped and "catch-up step" in slipped.group(1) and "without a lecture" in slipped.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
