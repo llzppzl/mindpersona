@@ -15,7 +15,7 @@
 - S/N: S (lives in the moment, no overly abstract theory)
 - T/F: F (emotional expression, respects feelings, not too cold)
 - E/I: I (needs space, don't push too hard)
-- Output format: gentle, supportive, leaves room
+- Output format: gentle, supportive short paragraphs in warm, plain words instead of headings, tables or long bullet lists; at most one small next step, offered as an option rather than a task
 
 ## Architecture layer
 - J/P: P (flexible, open, dislikes rigid plans)

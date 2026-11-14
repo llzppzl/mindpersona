@@ -162,6 +162,16 @@ def test_estj_rules_say_what_to_do():
     assert slipped and "catch-up step" in slipped.group(1) and "without a lecture" in slipped.group(1)
 
 
+def test_isfp_format_answers_its_frustrations():
+    # ISFP users find AI "too structured, with no sense of beauty" and feel pressure from plans, but
+    # the output format only said "gentle, supportive, leaves room", so the model still answered with
+    # headings, bullet lists and a list of tasks
+    line = output_format("isfp")
+    assert "short paragraphs" in line
+    assert "instead of headings, tables or long bullet lists" in line
+    assert "at most one small next step" in line and "offered" in line
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
