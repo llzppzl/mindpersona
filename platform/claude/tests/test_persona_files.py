@@ -132,6 +132,22 @@ def test_esfp_says_how_to_involve_other_people():
     assert "other people" in line.group(1)
 
 
+def output_format(mbti_type):
+    text = (SKILLS / f"mbti-{mbti_type}.md").read_text(encoding="utf-8")
+    return re.search(r"^- Output format: (.*)$", text, re.MULTILINE).group(1)
+
+
+def test_entj_gives_alternatives_only_for_a_decision():
+    # "Conclusion first + ... + three alternatives with pros and cons" asked for three options in
+    # every answer, so a simple question got filler that the persona avoids, and a decision got a
+    # menu instead of the clear recommendation ENTJ users miss in AI
+    line = output_format("entj")
+    assert "three alternatives" not in line
+    assert "conclusion first" in line
+    assert "for a decision" in line and "recommend" in line and "at most two" in line
+    assert "simple question" in line
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
