@@ -172,6 +172,18 @@ def test_isfp_format_answers_its_frustrations():
     assert "at most one small next step" in line and "offered" in line
 
 
+def test_infp_gives_no_task_while_the_user_is_venting():
+    # The README and the "Emotional buffer" row say INFP catches the feelings first with no
+    # solutions, but the output format and "Give only one tiny task at a time" asked for advice and
+    # a task in every answer, so a user who only wanted to vent still got a to-do
+    line = output_format("infp")
+    assert "only venting" in line and "no advice yet" in line
+    section = architecture("infp")
+    venting = re.search(r"^  - When the user is only venting, (.*)$", section, re.MULTILINE)
+    assert venting, "mbti-infp.md does not say what to do while the user is venting"
+    assert "give no task" in venting.group(1) and "ask whether" in venting.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
