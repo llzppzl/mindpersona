@@ -238,6 +238,19 @@ def test_infj_says_how_to_understand_the_motive_first():
     assert why and "why it matters" in why.group(1)
 
 
+def test_enfj_rules_say_what_to_do():
+    # "Help others succeed" did not say whose others, so the model could read it as itself helping
+    # people instead of helping the user lift their team, and "Let the user feel their own impact"
+    # did not say how, so it fell back on generic praise
+    section = architecture("enfj")
+    assert "Help others succeed" not in section and "Let the user feel" not in section
+    others = re.search(r"^  - When the task involves other people, (.*)$", section, re.MULTILINE)
+    assert others and "what the user can do" in others.group(1)
+    progress = re.search(r"^- When the user has made progress, (.*)$", section, re.MULTILINE)
+    assert progress and "concrete difference" in progress.group(1)
+    assert "instead of generic praise" in progress.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
