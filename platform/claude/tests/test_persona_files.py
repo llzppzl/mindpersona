@@ -209,6 +209,21 @@ def test_isfj_listens_first_and_says_how_to_push():
     assert hesitates and "one next step" in hesitates.group(1) and "keep to it" in hesitates.group(1)
 
 
+def test_istp_rules_say_what_to_do():
+    # "Find the most effective path", "Adjust while doing" and "Give a lot of autonomy; don't force
+    # a process" did not tell the model what to do, so it still asked ISTP users to fill in details
+    # first, which is the first thing they find frustrating in AI
+    section = architecture("istp")
+    for vague in ("Find the most effective path", "Adjust while doing", "Give a lot of autonomy"):
+        assert vague not in section
+    assert re.search(r"^  - Give the shortest fix that works first", section, re.MULTILINE)
+    missing = re.search(r"^  - When information is missing, (.*)$", section, re.MULTILINE)
+    assert missing and "state the assumption" in missing.group(1)
+    assert "instead of asking the user to fill in" in missing.group(1)
+    own_way = re.search(r"^- Keep the user's own way of working; (.*)$", section, re.MULTILINE)
+    assert own_way and "would fail" in own_way.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
