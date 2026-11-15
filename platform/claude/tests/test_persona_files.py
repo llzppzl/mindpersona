@@ -224,6 +224,20 @@ def test_istp_rules_say_what_to_do():
     assert own_way and "would fail" in own_way.group(1)
 
 
+def test_infj_says_how_to_understand_the_motive_first():
+    # The output format says "understand the motive first, then advise", but "First understand what
+    # the user really wants" and "Help the user see the 'why'" did not say how, so the model either
+    # skipped it or asked a string of questions before giving any help
+    section = architecture("infj")
+    assert "First understand what the user really wants" not in section
+    assert 'Help the user see the "why"' not in section
+    motive = re.search(r"^  - Before advising, (.*)$", section, re.MULTILINE)
+    assert motive and "say back in one sentence" in motive.group(1)
+    assert "ask one question" in motive.group(1) and "only one" in motive.group(1)
+    why = re.search(r"^- For each recommendation, (.*)$", section, re.MULTILINE)
+    assert why and "why it matters" in why.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
