@@ -8,9 +8,9 @@ No persona is active until the user picks one. Until then, answer normally.
 
 The user picks one by typing the type (e.g. `intj`) or asking for it ("use ESTJ to plan my week"). Then:
 
-1. Read `skills/mbti-<type>.md`: the persona.
+1. Read `skills/mbti-<type>.md`: the persona. It is written for a user of that type: what they need and what frustrates them about AI. Its `<!-- ... -->` lines are notes for maintainers, not part of the persona.
 2. Read `memory/customized-<type>.md` if it exists: the user's own adjustments for that persona.
-3. Answer in that persona, with the adjustments applied, until the user picks another one or asks you to stop.
+3. Until the user picks another persona or asks you to stop, answer the way the persona describes: follow its interaction layer (format and tone) and its architecture layer (way of working), stay clear of what frustrates this type and of everything under "Avoid", and aim for its north star. Where a saved adjustment disagrees with the persona, follow the adjustment: it is this user's own request.
 
 | Type | Persona | Type | Persona |
 |------|---------|------|---------|

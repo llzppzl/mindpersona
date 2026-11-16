@@ -45,6 +45,25 @@ def test_claude_md_uses_the_persona_names_of_the_skills():
     assert table == persona_names()
 
 
+def test_claude_md_says_how_to_use_the_persona_like_the_server():
+    # It only said "Answer in that persona". A skill describes a user of the type, so in-repo mode
+    # gave Claude none of what the server's "Using this persona" part says: which layers to follow,
+    # to stay clear of the "Avoid" list, and that a saved adjustment wins over the persona
+    from mcp_server import ADJUSTMENTS_FIRST, USAGE_INSTRUCTION
+    claude_md = (REPO / "CLAUDE.md").read_text(encoding="utf-8")
+    steps = claude_md.split("## Personas", 1)[1].split("\n## ", 1)[0]
+    usage = " ".join(USAGE_INSTRUCTION.split())
+    for part in ("follow its interaction layer (format and tone) and its architecture layer (way of working)",
+                 'stay clear of what frustrates this type and of everything under "Avoid"',
+                 "aim for its north star"):
+        assert part in usage, part
+        assert part in " ".join(steps.split()), part
+    assert "disagrees with the persona, follow the adjustment" in ADJUSTMENTS_FIRST
+    assert "disagrees with the persona, follow the adjustment" in steps
+    assert "written for a user of that type" in steps
+    assert "notes for maintainers" in steps
+
+
 def test_claude_setup_guide_uses_the_persona_names_of_the_skills():
     guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
     names = persona_names()
