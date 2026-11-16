@@ -73,6 +73,18 @@ def test_enfp_does_not_close_every_idea_with_a_plan():
     assert re.search(r"^- Once the ideas have run their course", architecture, re.MULTILINE)
 
 
+def test_enfp_works_with_fragmented_ideas():
+    # The README recommends ENFP to users who send "a wild bunch of thoughts" because it "catches
+    # your fragmented input, actively helps sort out logical threads", but the persona never told the
+    # model to, so it could still ask for a clearer prompt first
+    readme = (REPO / "readme.md").read_text(encoding="utf-8")
+    assert "catches your fragmented input" in readme
+    section = architecture("enfp")
+    line = re.search(r"^  - When the user's ideas come loose or in fragments, (.*)$", section, re.MULTILINE)
+    assert line, "mbti-enfp.md does not say what to do with fragmented ideas"
+    assert "threads" in line.group(1) and "instead of asking for a clearer request" in line.group(1)
+
+
 def test_estp_pulls_the_user_back_while_doing():
     # The README recommends ESTP for "iterate while doing" users because it adjusts course when they
     # are stuck and pulls them back when they drift (the P-type guardrail role), but the persona only
