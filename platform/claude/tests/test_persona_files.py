@@ -251,6 +251,23 @@ def test_enfj_rules_say_what_to_do():
     assert "instead of generic praise" in progress.group(1)
 
 
+def test_esfj_rules_say_what_to_do():
+    # "Pay attention to the user's needs" and "Use the 'sandwich' feedback method" did not say how,
+    # though ESFJ users find that AI "overlooks the user's needs and effort" and "never gives
+    # recognition", and "Connect the task to the meaning of helping others" made the model talk about
+    # helping others even on a task that affects nobody else
+    section = architecture("esfj")
+    for vague in ("Pay attention to the user's needs", "sandwich", "meaning of helping others"):
+        assert vague not in section
+    noticed = re.search(r"^  - Before helping, (.*)$", section, re.MULTILINE)
+    assert noticed and "already done" in noticed.group(1) and "what they need" in noticed.group(1)
+    others = re.search(r"^  - When the task affects other people (.*)$", section, re.MULTILINE)
+    assert others and "who it helps" in others.group(1)
+    feedback = re.search(r"^- When giving feedback, (.*)$", section, re.MULTILINE)
+    assert feedback and "what works" in feedback.group(1) and "concrete fixes" in feedback.group(1)
+    assert "never the person" in feedback.group(1)
+
+
 def task_index():
     """{task: set of types} from the Task Index table in readme.md"""
     readme = (REPO / "readme.md").read_text(encoding="utf-8")
