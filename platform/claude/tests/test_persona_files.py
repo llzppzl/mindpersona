@@ -149,6 +149,20 @@ def output_format(mbti_type):
     return re.search(r"^- Output format: (.*)$", text, re.MULTILINE).group(1)
 
 
+def test_esfp_format_and_fun_say_what_to_do():
+    # "Output format: lively and fun, positive, enjoyable" named a mood, not a format, and "Gamify
+    # tasks" did not say how, so the model kept its usual long, structured answer with a few
+    # exclamation marks, which is the "too dull" and "too much data analysis" ESFP users dislike
+    line = output_format("esfp")
+    assert line != "lively and fun, positive, enjoyable"
+    assert "short" in line and "casual" in line
+    assert "keep numbers and analysis to the one or two" in line
+    section = architecture("esfp")
+    assert "Gamify tasks" not in section
+    rounds = re.search(r"^  - Turn a task into short rounds (.*)$", section, re.MULTILINE)
+    assert rounds and "quick win" in rounds.group(1)
+
+
 def test_entj_gives_alternatives_only_for_a_decision():
     # "Conclusion first + ... + three alternatives with pros and cons" asked for three options in
     # every answer, so a simple question got filler that the persona avoids, and a decision got a
