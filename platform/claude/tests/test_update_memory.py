@@ -115,6 +115,19 @@ def test_empty_or_too_long_summary_is_rejected(temp_memory_dir):
     assert "300" in msg
 
 
+def test_summary_that_is_only_a_list_marker_is_rejected(temp_memory_dir):
+    """A summary of only "- " or "1." was saved as an adjustment "-" or "1." and reported as saved,
+    so the model told the user it would follow it from now on"""
+    for summary in ("- ", "-", "*", "1.", " 2) "):
+        success, msg = append_to_customized("intj", summary)
+        assert not success, summary
+        assert "empty" in msg
+    assert not (temp_memory_dir / "customized-intj.md").exists()
+    # A marker that starts real text is still dropped, and text that only looks like one is kept
+    assert append_to_customized("intj", "-1 is a valid index")[0]
+    assert "] -1 is a valid index\n" in read(temp_memory_dir)
+
+
 def test_same_adjustment_is_not_saved_twice(temp_memory_dir):
     append_to_customized("intj", "No small talk")
     success, msg = append_to_customized("intj", "No small talk")

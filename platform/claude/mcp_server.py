@@ -215,8 +215,11 @@ def clean_summary(feedback_summary: str) -> str:
 
     A list marker the model put in front ("- Use tables") is dropped. Before, it was saved as
     "- [time] - Use tables", and the same summary was saved again every time, because the saved
-    line still said "- Use tables" after its own bullet and time were taken off."""
-    return re.sub(r"^(?:[-*+]|\d+[.)])\s+", "", " ".join((feedback_summary or "").split()))
+    line still said "- Use tables" after its own bullet and time were taken off.
+
+    A summary that is only a marker ("- ", "1.") comes out empty, so it is refused. Before, the
+    marker was kept and saved as an adjustment "-", reported as saved."""
+    return re.sub(r"^(?:[-*+]|\d+[.)])(?:\s+|$)", "", " ".join((feedback_summary or "").split()))
 
 
 # A heading that ends the adjustments section: "# ..." or "## ...". A "### ..." heading that the
