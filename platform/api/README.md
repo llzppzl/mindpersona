@@ -2,7 +2,7 @@
 
 Use a persona as the system prompt of any chat API (Claude, OpenAI, a local model, ...).
 
-[`prompts.yaml`](./prompts.yaml) lists the 16 personas: `id`, a short `description`, `traits`, and the `file` with the prompt (relative to this folder). The prompt is the skill file itself.
+[`prompts.yaml`](./prompts.yaml) lists the 16 personas: `id`, a `description` of what the persona is good for, the type's `traits`, and the `file` with the prompt (relative to this folder). The prompt is the skill file itself.
 
 ## Load a persona
 
@@ -49,4 +49,4 @@ system_prompt += ("\n\n## Personal adjustments\n\n" + "\n".join(f"- {a}" for a i
 
 ## Choosing a persona
 
-`description` and `traits` in `prompts.yaml`, and the Task Index in the [README](../../readme.md#task-index), say what each persona is good for.
+`description` in `prompts.yaml` says what each persona is good for, in the same words the Claude Code server uses to pick one. The Task Index in the [README](../../readme.md#task-index) has more detail.

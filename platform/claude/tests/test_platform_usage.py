@@ -59,6 +59,20 @@ def test_saas_guide_says_what_each_persona_is_good_for_like_the_server():
     assert table == expected
 
 
+def test_api_index_says_what_each_persona_is_good_for_like_the_server():
+    # Its descriptions described the personality type, not the persona: ISFP was a "Free spirit: keen
+    # sense of beauty" and INTJ a "Strategic advisor ... good at long-term planning", while the
+    # skills, the Task Index and load_persona make ISFP calm companionship and INTJ comparing options.
+    # The API README tells readers to pick a persona by them
+    index = (REPO / "platform" / "api" / "prompts.yaml").read_text(encoding="utf-8")
+    described = dict(re.findall(r'^  - id: "mbti-(\w+)"\n(?:    .*\n)*?    description: "([^"]*)"$',
+                                index, re.MULTILINE))
+    expected = {t.lower(): g[0].upper() + g[1:]
+                for t, g in re.findall(r"^- ([A-Z]{4}): (.+)$", mcp_server.PERSONA_GUIDE, re.MULTILINE)}
+    assert len(expected) == 16
+    assert described == expected
+
+
 def test_api_readme_adds_the_same_usage_text():
     readme = (REPO / "platform" / "api" / "README.md").read_text(encoding="utf-8")
     code = readme[readme.index("```python"):]

@@ -9,7 +9,7 @@ prompts:
     name: "INTJ - Cold Chief of Staff"
     name_en: "Architect"
     file: "../../skills/mbti-intj.md"
-    description: "Strategic advisor: thinks independently, good at long-term planning"
+    description: "Comparing options and giving a clear verdict, critical review, setting priorities"
     mbti_category: "NT"
     traits:
       - "Logical analysis"
@@ -20,7 +20,7 @@ prompts:
     name: "INTP - Logician"
     name_en: "Logician"
     file: "../../skills/mbti-intp.md"
-    description: "Rational analyst: thinks deeply, wants logical consistency"
+    description: "Finding logical flaws, cause-and-effect analysis"
     mbti_category: "NT"
     traits:
       - "Logical analysis"
@@ -31,7 +31,7 @@ prompts:
     name: "ENTJ - Commander"
     name_en: "Commander"
     file: "../../skills/mbti-entj.md"
-    description: "Decisive decision-maker: strong leader, plays to win"
+    description: "Driving decisions forward, strategic breakdown of goals, pushing others"
     mbti_category: "NT"
     traits:
       - "Strategic planning"
@@ -42,7 +42,7 @@ prompts:
     name: "ENTP - Debater"
     name_en: "Debater"
     file: "../../skills/mbti-entp.md"
-    description: "Inventive challenger: questions everything, wants freedom"
+    description: "Connecting ideas and arguing the opposite side"
     mbti_category: "NT"
     traits:
       - "Creative thinking"
@@ -53,7 +53,7 @@ prompts:
     name: "INFJ - Advocate"
     name_en: "Advocate"
     file: "../../skills/mbti-infj.md"
-    description: "Idealist: reads people well, looks for meaning"
+    description: "Mission and long-term vision"
     mbti_category: "NF"
     traits:
       - "Values-driven"
@@ -64,7 +64,7 @@ prompts:
     name: "INFP - Trusted Partner"
     name_en: "Mediator"
     file: "../../skills/mbti-infp.md"
-    description: "Idealist: sincere helper, works toward self-acceptance"
+    description: "Taking feelings first without pushing solutions, ideas tied to personal meaning"
     mbti_category: "NF"
     traits:
       - "Emotional support"
@@ -75,7 +75,7 @@ prompts:
     name: "ENFJ - Protagonist"
     name_en: "Protagonist"
     file: "../../skills/mbti-enfj.md"
-    description: "Inspiring leader: charismatic, focused on growth"
+    description: "Growth and motivation, finding the meaning of a task"
     mbti_category: "NF"
     traits:
       - "Emotional resonance"
@@ -86,7 +86,7 @@ prompts:
     name: "ENFP - Campaigner"
     name_en: "Campaigner"
     file: "../../skills/mbti-enfp.md"
-    description: "Enthusiastic creative: endless ideas, chases possibilities"
+    description: "Open-minded brainstorming"
     mbti_category: "NF"
     traits:
       - "Sparking ideas"
@@ -97,7 +97,7 @@ prompts:
     name: "ISTJ - Logistician"
     name_en: "Logistician"
     file: "../../skills/mbti-istj.md"
-    description: "Practical and reliable: responsible, values integrity"
+    description: "Following the rules exactly, acceptance criteria, structured summaries"
     mbti_category: "SJ"
     traits:
       - "Practical and concrete"
@@ -108,7 +108,7 @@ prompts:
     name: "ISFJ - Defender"
     name_en: "Defender"
     file: "../../skills/mbti-isfj.md"
-    description: "Warm protector: loyal and dependable, helps quietly"
+    description: "Patient, practical support that listens first"
     mbti_category: "SJ"
     traits:
       - "Warm care"
@@ -119,7 +119,7 @@ prompts:
     name: "ESTJ - Executive"
     name_en: "Executive"
     file: "../../skills/mbti-estj.md"
-    description: "Efficient executor: practical manager, aims for results"
+    description: "Quick results, schedules and daily tasks"
     mbti_category: "SJ"
     traits:
       - "Efficient execution"
@@ -130,7 +130,7 @@ prompts:
     name: "ESFJ - Consul"
     name_en: "Consul"
     file: "../../skills/mbti-esfj.md"
-    description: "Warm and caring: sociable, loyal and giving"
+    description: "Warm, team-minded help and recognition"
     mbti_category: "SJ"
     traits:
       - "Warm care"
@@ -141,7 +141,7 @@ prompts:
     name: "ISTP - Virtuoso"
     name_en: "Virtuoso"
     file: "../../skills/mbti-istp.md"
-    description: "Hands-on pragmatist: adapts quickly, values efficiency"
+    description: "Tracing a problem from cause to effect, shortest hands-on path"
     mbti_category: "SP"
     traits:
       - "Hands-on"
@@ -152,7 +152,7 @@ prompts:
     name: "ISFP - Adventurer"
     name_en: "Adventurer"
     file: "../../skills/mbti-isfp.md"
-    description: "Free spirit: keen sense of beauty, values authenticity"
+    description: "Calm companionship in the moment"
     mbti_category: "SP"
     traits:
       - "Living in the moment"
@@ -163,7 +163,7 @@ prompts:
     name: "ESTP - Entrepreneur"
     name_en: "Entrepreneur"
     file: "../../skills/mbti-estp.md"
-    description: "Action-taker: practical and decisive, breaks deadlocks"
+    description: "Fast action and breaking deadlocks"
     mbti_category: "SP"
     traits:
       - "Action-oriented"
@@ -174,7 +174,7 @@ prompts:
     name: "ESFP - Entertainer"
     name_en: "Entertainer"
     file: "../../skills/mbti-esfp.md"
-    description: "Full of energy: enjoys the moment, lifts the room"
+    description: "Lively, upbeat energy"
     mbti_category: "SP"
     traits:
       - "Energetic"
