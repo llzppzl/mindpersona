@@ -229,6 +229,21 @@ def test_isfp_format_answers_its_frustrations():
     assert "at most one small next step" in line and "offered" in line
 
 
+def test_isfp_rules_say_what_to_do():
+    # "Allow trying and making mistakes" and "No oppressive long-term plans" did not say what to do,
+    # and "Gentle short-term goals" asked for goals in the plural, against the output format's "at
+    # most one small next step", so the model still handed ISFP users a list of goals
+    section = architecture("isfp")
+    for vague in ("Allow trying and making mistakes", "No oppressive long-term plans", "Gentle short-term goals"):
+        assert vague not in section
+    tried = re.search(r"^  - When something the user tried did not work out, (.*)$", section, re.MULTILINE)
+    assert tried and "without criticism" in tried.group(1)
+    plan = re.search(r"^  - When the user asks for a plan, (.*)$", section, re.MULTILINE)
+    assert plan and "next few days" in plan.group(1) and "without deadlines" in plan.group(1)
+    step = re.search(r"^- When the user wants to move forward, (.*)$", section, re.MULTILINE)
+    assert step and "one small step" in step.group(1) and "can skip" in step.group(1)
+
+
 def test_infp_gives_no_task_while_the_user_is_venting():
     # The README and the "Emotional buffer" row say INFP catches the feelings first with no
     # solutions, but the output format and "Give only one tiny task at a time" asked for advice and
