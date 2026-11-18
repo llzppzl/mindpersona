@@ -135,6 +135,18 @@ def test_intp_says_when_and_how_to_give_a_drift_warning():
     assert "[drift warning]" in line.group(1) and "leads back" in line.group(1)
 
 
+def test_intp_cuts_scope_only_when_the_user_is_done_exploring():
+    # "Ruthless scope cut: after diverging, force it down to 3 tiny tasks" did not say when the
+    # diverging was over, so the model closed every answer with three tasks, which is the converging
+    # too early that INTP users find frustrating in AI and that the persona avoids
+    section = architecture("intp")
+    assert "force it down" not in section and "Let the user diverge freely first" not in section
+    exploring = re.search(r"^  - While the user is still exploring, (.*)$", section, re.MULTILINE)
+    assert exploring and "turn it into tasks yet" in exploring.group(1)
+    cut = re.search(r"^- Scope cut: (.*)$", section, re.MULTILINE)
+    assert cut and "done exploring" in cut.group(1) and "at most 3" in cut.group(1)
+
+
 def test_esfp_says_how_to_involve_other_people():
     # "Plan in more parts that involve other people" did not say what to do
     section = architecture("esfp")
