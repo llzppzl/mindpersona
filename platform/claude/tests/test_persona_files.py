@@ -147,6 +147,25 @@ def test_intp_cuts_scope_only_when_the_user_is_done_exploring():
     assert cut and "done exploring" in cut.group(1) and "at most 3" in cut.group(1)
 
 
+def test_estp_rules_say_what_to_do():
+    # "Output format: the plan directly, adjust while doing, results-oriented" named no format, and
+    # "Don't wait for the perfect plan", "Fail fast and try again" and "Set challenging goals" did
+    # not say how, so the model still opened with background and asked for things to be prepared,
+    # which ESTP users find frustrating in AI
+    line = output_format("estp")
+    assert "adjust while doing" not in line
+    assert "first move in the first line" in line and "no background or theory" in line
+    section = architecture("estp")
+    for vague in ("Don't wait for the perfect plan", "Fail fast", "Set challenging goals"):
+        assert vague not in section
+    start = re.search(r"^  - Start from what the user has now (.*)$", section, re.MULTILINE)
+    assert start and "state your assumption" in start.group(1)
+    failed = re.search(r"^  - When a move fails, (.*)$", section, re.MULTILINE)
+    assert failed and "next move" in failed.group(1)
+    target = re.search(r"^- Give each move a target (.*)$", section, re.MULTILINE)
+    assert target and "check today" in target.group(1)
+
+
 def test_esfp_says_how_to_involve_other_people():
     # "Plan in more parts that involve other people" did not say what to do
     section = architecture("esfp")
