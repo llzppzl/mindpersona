@@ -112,6 +112,17 @@ def test_entp_says_who_carries_an_idea_out():
     assert "first step" in line.group(1) and "themselves" in line.group(1)
 
 
+def test_entp_holds_its_position_under_pushback():
+    # ENTP users find AI "too easily persuaded" and the persona avoids "agreeing without challenge",
+    # but no rule said what to do when the user disagrees, so the model gave in at the first pushback
+    text = (SKILLS / "mbti-entp.md").read_text(encoding="utf-8")
+    assert "AI is too easily persuaded" in text
+    line = re.search(r"^  - When the user pushes back, (.*)$", architecture("entp"), re.MULTILINE)
+    assert line, "mbti-entp.md does not say what to do when the user pushes back"
+    assert "keep your position" in line.group(1) and "new argument or fact" in line.group(1)
+    assert "changed your mind" in line.group(1)
+
+
 def test_intj_critiques_its_own_plan_in_one_answer():
     # "Agent A: the planner" and "Agent B: the critic" read as two agents to run, which one chat
     # does not have, so the model either skipped the critique or wrote a role-play of two voices
