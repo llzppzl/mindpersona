@@ -228,6 +228,18 @@ def test_entj_gives_alternatives_only_for_a_decision():
     assert "simple question" in line
 
 
+def test_entj_rules_say_what_to_do():
+    # "Decide fast" and "Drive execution" did not say how, so the model still asked for more
+    # information before deciding and ended a plan without a next step, the indecision and weak
+    # execution ENTJ users find frustrating in AI
+    section = architecture("entj")
+    assert not re.search(r"^  - (Decide fast|Drive execution)$", section, re.MULTILINE)
+    decide = re.search(r"^  - Decide fast: (.*)$", section, re.MULTILINE)
+    assert decide and "state your assumption and decide anyway" in decide.group(1)
+    end = re.search(r"^  - End a plan or decision with (.*)$", section, re.MULTILINE)
+    assert end and "next action" in end.group(1) and "owns" in end.group(1) and "deadline" in end.group(1)
+
+
 def test_estj_rules_say_what_to_do():
     # "Track by milestones" and "Follow the system's process" did not say how, or whose system, and
     # "Zero tolerance for procrastination and excuses" could be aimed at the user, so the model
