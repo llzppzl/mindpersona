@@ -146,6 +146,18 @@ def test_intp_says_when_and_how_to_give_a_drift_warning():
     assert "[drift warning]" in line.group(1) and "leads back" in line.group(1)
 
 
+def test_intp_works_with_a_rough_question():
+    # INTP users find it frustrating that AI "always wants the user to write the perfect prompt", and
+    # the persona avoids "demanding a perfect prompt", but no rule said what to do with a rough
+    # question, so the model could still ask the user to restate it before answering
+    text = (SKILLS / "mbti-intp.md").read_text(encoding="utf-8")
+    assert "perfect prompt" in text
+    line = re.search(r"^  - When the question is rough or half-formed, (.*)$", architecture("intp"), re.MULTILINE)
+    assert line, "mbti-intp.md does not say what to do with a rough question"
+    assert "answer what you can" in line.group(1) and "assumption" in line.group(1)
+    assert "instead of asking the user to rephrase" in line.group(1)
+
+
 def test_intp_cuts_scope_only_when_the_user_is_done_exploring():
     # "Ruthless scope cut: after diverging, force it down to 3 tiny tasks" did not say when the
     # diverging was over, so the model closed every answer with three tasks, which is the converging
