@@ -481,10 +481,13 @@ def remove_adjustment(mbti_type: str, number) -> tuple[bool, str]:
     customized_file = MEMORY_DIR / f"customized-{mbti_lower}.md"
     if not customized_file.exists():
         return _remove_entry(mbti_type, number)
+    # OSError also covers a lock file that cannot be created, e.g. in a folder the user cannot write
+    # to. Before, that PermissionError went up uncaught, so the tool failed with a bare "[Errno 13]"
+    # and no word that nothing had changed, while a save in the same folder said so
     try:
         with locked(customized_file):
             return _remove_entry(mbti_type, number)
-    except TimeoutError as e:
+    except OSError as e:
         return False, f"Could not remove the adjustment, so nothing changed: {e}"
 
 

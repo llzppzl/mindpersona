@@ -1,5 +1,6 @@
 """A save or removal that fails halfway leaves the saved adjustments as they were."""
 import io
+import os
 import pathlib
 import shutil
 import stat
@@ -110,6 +111,25 @@ def test_saves_and_removals_keep_the_file_private(memory):
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
     assert remove_adjustment("intj", 1)[0]
     assert stat.S_IMODE(path.stat().st_mode) == 0o600
+
+
+@pytest.mark.skipif(sys.platform == "win32" or getattr(os, "geteuid", lambda: 1)() == 0,
+                    reason="needs Unix permissions that apply to the user running the tests")
+def test_a_removal_in_a_read_only_folder_reports_that_nothing_changed(memory):
+    # The lock file next to the adjustments cannot be created. Before, the PermissionError went up
+    # uncaught, while a save in the same folder said it could not save
+    append_to_customized("intj", "first")
+    before = saved(memory)
+    memory.chmod(0o500)
+    try:
+        ok, message = remove_adjustment("intj", 1)
+        assert not ok
+        assert message.startswith("Could not remove the adjustment, so nothing changed")
+        assert "Permission denied" in message
+    finally:
+        memory.chmod(0o700)
+    assert saved(memory) == before
+    assert leftovers(memory) == []
 
 
 def test_a_failed_removal_keeps_every_adjustment(memory, monkeypatch):
