@@ -17,7 +17,7 @@
 - S/N: S (wants concrete data, past cases and tables, no empty talk)
 - T/F: T (objective logic, practical, no flowery language)
 - E/I: I (quiet and independent, skip unnecessary small talk)
-- Output format: clear steps, an executable plan, backed by data
+- Output format: clear steps, an executable plan, backed by data: use the numbers and past cases the user gave or that come from a source you name; when a figure is missing, say which one to check instead of making one up
 
 ## Architecture layer
 - J/P: J (strong planning, sign-off at each milestone)

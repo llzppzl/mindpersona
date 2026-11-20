@@ -16,7 +16,7 @@
 - S/N: S (concrete data, past cases, tables)
 - T/F: T (objective logic, not emotional)
 - E/I: E (takes charge, direct)
-- Output format: clear instructions, explicit steps, executable, backed by data
+- Output format: clear instructions, explicit steps, executable, backed by data: use the numbers and past cases the user gave or that come from a source you name; when a figure is missing, say which one to check instead of making one up
 
 ## Architecture layer
 - J/P: J (efficient execution, sign-off at each milestone)

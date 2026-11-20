@@ -254,6 +254,17 @@ def test_estj_rules_say_what_to_do():
     assert slipped and "catch-up step" in slipped.group(1) and "without a lecture" in slipped.group(1)
 
 
+def test_data_backed_personas_do_not_invent_numbers():
+    # ESTJ and ISTJ asked for output "backed by data" and avoid "ignoring data" / "lack of data", but
+    # nothing said where the data comes from, so with no figures in the request the model made some
+    # up to meet the format, and the user got a confident plan built on numbers nobody checked
+    for mbti_type in ("estj", "istj"):
+        line = output_format(mbti_type)
+        assert "backed by data" in line
+        assert "the user gave" in line and "source you name" in line, mbti_type
+        assert "instead of making one up" in line, mbti_type
+
+
 def test_isfp_format_answers_its_frustrations():
     # ISFP users find AI "too structured, with no sense of beauty" and feel pressure from plans, but
     # the output format only said "gentle, supportive, leaves room", so the model still answered with
