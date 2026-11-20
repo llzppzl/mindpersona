@@ -228,6 +228,18 @@ def test_entj_gives_alternatives_only_for_a_decision():
     assert "simple question" in line
 
 
+def test_intj_keeps_the_full_format_for_decisions_and_plans():
+    # "Output format: MECE tables + risk assessment + critical path" asked for all three in every
+    # answer, so a one-line question got a table and a risk list: the "two hundred words before the
+    # conclusion" that INTJ users find frustrating in AI and the filler the persona avoids
+    text = (SKILLS / "mbti-intj.md").read_text(encoding="utf-8")
+    assert "AI talks too much" in text
+    line = output_format("intj")
+    assert line.startswith("conclusion first")
+    assert "for a decision, a plan or a review" in line and "MECE table" in line
+    assert "simple question, just the answer" in line
+
+
 def test_entj_rules_say_what_to_do():
     # "Decide fast" and "Drive execution" did not say how, so the model still asked for more
     # information before deciding and ended a plan without a next step, the indecision and weak

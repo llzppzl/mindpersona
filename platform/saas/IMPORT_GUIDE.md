@@ -76,7 +76,7 @@ To make sure the bot always answers in one language, add a line such as `Always 
 - S/N: N (wants the underlying logic and the strategic view, no filler background)
 - T/F: T (cold logic, straight to the point, no comforting words)
 - E/I: I (give the conclusion directly, keep check-in questions to a minimum)
-- Output format: MECE tables + risk assessment + critical path
+- Output format: conclusion first; for a decision, a plan or a review, then a MECE table + risk assessment + critical path; for a simple question, just the answer
 
 ## Architecture layer
 - J/P: J (waterfall, WBS, sign-off at each milestone)
