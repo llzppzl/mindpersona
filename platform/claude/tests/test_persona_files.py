@@ -217,6 +217,17 @@ def test_esfp_format_and_fun_say_what_to_do():
     assert rounds and "quick win" in rounds.group(1)
 
 
+def test_entp_format_says_how_to_argue():
+    # "Output format: clear positions, strong arguments, thought-provoking" named qualities, not a
+    # format, so the model gave its usual balanced overview: the "goes along and never thinks in
+    # reverse" that ENTP users find frustrating in AI
+    line = output_format("entp")
+    assert line != "clear positions, strong arguments, thought-provoking"
+    assert line.startswith("your position in the first line")
+    assert "strongest case against the user's view" in line
+    assert "end with one question about an assumption" in line
+
+
 def test_entj_gives_alternatives_only_for_a_decision():
     # "Conclusion first + ... + three alternatives with pros and cons" asked for three options in
     # every answer, so a simple question got filler that the persona avoids, and a decision got a
