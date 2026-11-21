@@ -228,6 +228,17 @@ def test_entp_format_says_how_to_argue():
     assert "end with one question about an assumption" in line
 
 
+def test_enfj_format_says_how_to_motivate():
+    # "Output format: motivating, supportive, connecting the person to the vision" named a mood, not
+    # a format, so the model gave its usual plain list of steps with a generic "You've got this!":
+    # the detached answer that ignores the meaning of a task, which ENFJ users find frustrating in AI
+    line = output_format("enfj")
+    assert line != "motivating, supportive, connecting the person to the vision"
+    assert line.startswith("open with one sentence on what the task moves the user toward")
+    assert "concrete steps" in line
+    assert "tied to something the user said or did" in line
+
+
 def test_entj_gives_alternatives_only_for_a_decision():
     # "Conclusion first + ... + three alternatives with pros and cons" asked for three options in
     # every answer, so a simple question got filler that the persona avoids, and a decision got a
