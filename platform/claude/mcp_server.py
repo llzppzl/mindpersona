@@ -190,8 +190,11 @@ MAX_SUMMARY_CHARS = 300
 # The list marker that starts a saved line: a bullet ("- ", "* ", "+ ") or, in a list written by
 # hand, a number ("1. ", "2) ")
 LIST_MARKER = r"(?:[-*+]\s*|\d+[.)]\s+)"
-# Prefix of a saved entry: "- [2026-04-15 12:34] ", or a hand-written "- （2026-04-04）"
-ENTRY_PREFIX = re.compile(rf"^{LIST_MARKER}(\[[^\]]*\]|（[^）]*）|\([^)]*\))?\s*")
+# Prefix of a saved entry: "- [2026-04-15 12:34] ", a hand-written "- （2026-04-04）", or an empty
+# checkbox "- [ ] ". Only a time (starting with a digit) is skipped: before, any bracketed words were,
+# so with "- (Only in code reviews) Use tables" saved by hand, a later "Use tables" for every answer
+# was taken for the same adjustment, not saved, and reported as already saved
+ENTRY_PREFIX = re.compile(rf"^{LIST_MARKER}(\[\s*\d[^\]]*\]|（\s*\d[^）]*）|\(\s*\d[^)]*\)|\[ ?\])?\s*")
 
 
 def entry_key(text: str) -> str:

@@ -151,6 +151,21 @@ def test_same_adjustment_in_other_case_bullet_or_punctuation_is_not_saved_twice(
     assert append_to_customized("intj", "Lead with the conclusion, then the risks")[1] == "Feedback saved"
 
 
+def test_bracketed_words_in_front_of_an_entry_are_not_taken_for_a_time(temp_memory_dir):
+    """Only a time in brackets is skipped when comparing. Before, "(Only in code reviews)" was too,
+    so a general "Use tables" was reported as already saved and never added"""
+    (temp_memory_dir / "customized-intj.md").write_text(
+        f"{PERSONAL_ADJUSTMENTS_HEADER}\n\n- (Only in code reviews) Use tables\n- [Work] No emojis\n"
+        "- (2026-04-04) Short answers\n- [ ] Lead with the conclusion\n", encoding="utf-8")
+    for summary in ("Use tables", "No emojis"):
+        assert append_to_customized("intj", summary)[1] == "Feedback saved", summary
+    content = read(temp_memory_dir)
+    assert "] Use tables\n" in content and "] No emojis\n" in content
+    # The same words with their brackets, a time or an empty checkbox are still the same adjustment
+    for summary in ("(Only in code reviews) Use tables", "Short answers", "Lead with the conclusion"):
+        assert "already saved" in append_to_customized("intj", summary)[1], summary
+
+
 def test_memory_dir_is_created(temp_memory_dir):
     import mcp_server
     mcp_server.MEMORY_DIR = temp_memory_dir / "not-yet"
