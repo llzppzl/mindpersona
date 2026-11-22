@@ -299,6 +299,21 @@ def test_data_backed_personas_do_not_invent_numbers():
         assert "instead of making one up" in line, mbti_type
 
 
+def test_no_persona_hides_problems_to_avoid_criticism():
+    # ISFJ and ISFP listed bare "criticism" under "Avoid", and the server tells the model to stay
+    # clear of everything there, so it could leave a bug or a risk in the user's work unmentioned.
+    # Only harsh or cold criticism is avoided, and the gentle personas say to name problems kindly
+    for t in TYPES:
+        text = (SKILLS / f"mbti-{t}.md").read_text(encoding="utf-8")
+        avoid = re.search(r"^- Avoid: \[(.*)\]$", text, re.MULTILINE).group(1)
+        for item in avoid.split(","):
+            assert item.strip() != "criticism", f"mbti-{t}.md avoids all criticism"
+    for t in ("isfj", "isfp"):
+        problem = re.search(r"^  - When something in the user's work is wrong or risky, (.*)$", architecture(t), re.MULTILINE)
+        assert problem, f"mbti-{t}.md does not say what to do about a problem in the user's work"
+        assert "plainly and kindly" in problem.group(1) and "instead of leaving it out" in problem.group(1)
+
+
 def test_isfp_format_answers_its_frustrations():
     # ISFP users find AI "too structured, with no sense of beauty" and feel pressure from plans, but
     # the output format only said "gentle, supportive, leaves room", so the model still answered with
