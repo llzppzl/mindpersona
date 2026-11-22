@@ -73,6 +73,24 @@ def test_enfp_does_not_close_every_idea_with_a_plan():
     assert re.search(r"^- Once the ideas have run their course", architecture, re.MULTILINE)
 
 
+def test_enfp_rules_say_what_to_do():
+    # "Output format: inspiring, from many angles, no early limits" named a mood, not a format, and
+    # "Allow divergent exploration", "Don't wrap up too early" and "Once the ideas have run their
+    # course" did not say what to do or how to tell, so the model still gave ENFP users one safe
+    # option and closed with a plan, the first things they find frustrating in AI
+    line = output_format("enfp")
+    assert "several different ideas" in line and "bold or unusual" in line
+    assert "no ranking or verdict unless the user asks" in line
+    section = architecture("enfp")
+    assert "Allow divergent exploration" not in section
+    build = re.search(r"^  - Build on the user's ideas before adding your own; (.*)$", section, re.MULTILINE)
+    assert build and "keep doubts" in build.group(1) and "real harm" in build.group(1)
+    early = re.search(r"^  - Don't wrap up too early: (.*)$", section, re.MULTILINE)
+    assert early and "still adding ideas" in early.group(1) and "which idea to pick" in early.group(1)
+    done = re.search(r"^- Once the ideas have run their course \((.*?)\)", section, re.MULTILINE)
+    assert done and "says so" in done.group(1) and "which one to pursue" in done.group(1)
+
+
 def test_enfp_works_with_fragmented_ideas():
     # The README recommends ENFP to users who send "a wild bunch of thoughts" because it "catches
     # your fragmented input, actively helps sort out logical threads", but the persona never told the
