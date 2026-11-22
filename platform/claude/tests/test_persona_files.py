@@ -423,6 +423,19 @@ def test_infj_says_how_to_understand_the_motive_first():
     assert why and "why it matters" in why.group(1)
 
 
+def test_infj_ties_advice_to_the_users_own_long_term_goal():
+    # INFJ users find that AI's plans "lack a long-term vision", but "Connect today's actions to the
+    # long-term vision" did not say whose vision or how, and "with a focus on growth" was not a
+    # format, so the model either skipped it or made up a grand vision the user never had
+    line = output_format("infj")
+    assert "focus on growth" not in line
+    assert "for a plan or a decision" in line and "long-term goal" in line
+    section = architecture("infj")
+    assert "Connect today's actions to the long-term vision" not in section
+    goal = re.search(r"^  - Take the long-term goal from what the user has said; (.*)$", section, re.MULTILINE)
+    assert goal and "say-back" in goal.group(1) and "instead of making up" in goal.group(1)
+
+
 def test_enfj_rules_say_what_to_do():
     # "Help others succeed" did not say whose others, so the model could read it as itself helping
     # people instead of helping the user lift their team, and "Let the user feel their own impact"
