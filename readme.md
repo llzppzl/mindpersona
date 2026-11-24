@@ -29,13 +29,15 @@ Generic Agents are like "diplomats with no personality" — they don't make mist
 
 ## Solution
 
-**MBTI Three-Layer Mapping Framework** — achieving personal cognitive alignment through three technical layers:
+**MBTI Three-Layer Mapping Framework** — achieving personal cognitive alignment through three layers of each persona:
 
-| Layer | Technical Approach | Matched MBTI Dimension |
-|-------|-------------------|------------------------|
-| Interaction | System Prompt + Template Constraints | S/N (format), T/F (tone) |
-| Architecture | Workflow + Multi-Agent | J/P (execution push) |
-| Memory | Memory + RAG | Universal for all personalities |
+| Layer | How MindPersona does it | Matched MBTI Dimension |
+|-------|-------------------------|------------------------|
+| Interaction | Rules in the persona prompt for format and tone | S/N (format), T/F (tone) |
+| Architecture | Rules in the persona prompt for the way of working, such as tiny steps or a red-team check | J/P (execution push) |
+| Memory | Your saved adjustments in `memory/customized-<type>.md`, added to the persona prompt every time it loads | Universal for all personalities |
+
+Everything is prompt text: there is no retrieval (RAG) and no second agent. The MCP server for Claude Code only reads the persona files and saves your adjustments.
 
 ### Interaction Layer: How to Speak
 

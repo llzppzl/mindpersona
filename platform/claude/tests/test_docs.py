@@ -117,6 +117,23 @@ def test_readme_says_to_paste_a_copy_that_tells_the_model_to_use_the_persona():
     assert "## Using this persona" not in skill
 
 
+def test_readme_solution_names_only_what_mindpersona_does():
+    # The Solution table said the layers are built with "Workflow + Multi-Agent" and "Memory + RAG".
+    # MindPersona has neither: each layer is text in the persona prompt, and the memory is a file
+    # of saved adjustments added to it, so readers expected features that do not exist
+    readme = (REPO / "readme.md").read_text(encoding="utf-8")
+    solution = readme.split("## Solution", 1)[1].split("### Interaction Layer", 1)[0]
+    table = [line for line in solution.splitlines() if line.startswith("| ")]
+    assert len(table) == 4
+    for line in table:
+        assert "Multi-Agent" not in line and "RAG" not in line, line
+    assert "memory/customized-<type>.md" in solution
+    code = "\n".join(p.read_text(encoding="utf-8") for p in [REPO / "platform" / "claude" / "mcp_server.py",
+                                                            REPO / "mindpersona" / "cli.py"])
+    for word in ("embedding", "vector", "retriev"):
+        assert word not in code.lower()
+
+
 def test_clone_setup_installs_into_a_virtualenv():
     # The guides ran pip on the system python3. Pythons from Homebrew, uv, Ubuntu and Debian refuse
     # that with "externally-managed-environment" (PEP 668), so the clone setup stopped at its first
