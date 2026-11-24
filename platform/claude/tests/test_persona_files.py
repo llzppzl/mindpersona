@@ -317,6 +317,20 @@ def test_data_backed_personas_do_not_invent_numbers():
         assert "instead of making one up" in line, mbti_type
 
 
+def test_risk_and_roi_personas_do_not_invent_numbers():
+    # INTJ's format asked for a "risk assessment" and ENTJ's for an "ROI", with nothing on where the
+    # figures come from, so with none in the request the model gave "30% risk" or "3x ROI" it had
+    # made up. The README even showed INTJ answering with such numbers
+    intj = output_format("intj")
+    assert "risk assessment" in intj
+    assert "high, medium or low" in intj and "the user's numbers or a source you name" in intj
+    entj = output_format("entj")
+    assert "ROI" in entj
+    assert "high, medium or low" in entj and "the user's numbers or a source you name" in entj
+    readme = (SKILLS.parent / "readme.md").read_text(encoding="utf-8")
+    assert "30% risk" not in readme
+
+
 def test_no_persona_hides_problems_to_avoid_criticism():
     # ISFJ and ISFP listed bare "criticism" under "Avoid", and the server tells the model to stay
     # clear of everything there, so it could leave a bug or a risk in the user's work unmentioned.

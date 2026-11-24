@@ -5,7 +5,7 @@
 
 1. **You are a "get-things-done, straight-to-the-point" type**
    Your problem: It's meeting time, you need to quickly assess pros and cons of a plan. You throw the question to AI, and it serves you a formulaic essay: 200 words of industry background, sprinkled with "however, admittedly," and finally a disclaimer "specific situations require specific analysis." Watching this runaround wastes your time and spikes your blood pressure. Now you have to repeatedly emphasize "no formalities, no disclaimers, data tables only" for every query — communication overhead is exhausting.
-   What you need: A **"Cold Chief of Staff"** style Agent: the **INTJ** persona. It knows not to hedge, not to waste words, and delivers precise conclusions like "Option A has 30% risk, Option B saves 50K, recommend B."
+   What you need: A **"Cold Chief of Staff"** style Agent: the **INTJ** persona. It knows not to hedge, not to waste words, and delivers precise conclusions like "Recommend B: it saves the 50K you mentioned, and its main risk (a late supplier) is low and easy to check."
 
 2. **You are a "high-sensitive person who needs positive reinforcement"**
    Your problem: Feeling terrible today, work piling up, brain completely crashed. You reach out to AI for help. It instantly dumps a half-hour-by-half-hour "perfect schedule" and tells you to start the Pomodoro technique immediately. Facing these cold commands, your suffocation kicks in — no motivation to execute, just more desire to escape. In that vulnerable moment, the machine's "absolute rationality" becomes invisible pressure.
