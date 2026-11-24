@@ -117,6 +117,29 @@ def test_readme_says_to_paste_a_copy_that_tells_the_model_to_use_the_persona():
     assert "## Using this persona" not in skill
 
 
+def test_clone_setup_installs_into_a_virtualenv():
+    # The guides ran pip on the system python3. Pythons from Homebrew, uv, Ubuntu and Debian refuse
+    # that with "externally-managed-environment" (PEP 668), so the clone setup stopped at its first
+    # pip command
+    sections = [
+        (REPO / "readme.md", "### Claude Code (MCP server)", "\n### "),
+        (REPO / "platform" / "claude" / "README.md", "## Setup from a clone", "\n## "),
+        (REPO / "CONTRIBUTING.md", "## Development setup", "\n## "),
+    ]
+    for path, start, end in sections:
+        section = path.read_text(encoding="utf-8").split(start, 1)[1].split(end, 1)[0]
+        assert "python3 -m venv .venv" in section, path
+        assert ".venv/bin/pip install -r platform/claude/requirements.txt" in section, path
+        bare_pip = [line for line in section.splitlines()
+                    if re.match(r"\s*(python3? -m )?pip3? install", line)]
+        assert not bare_pip, (path, bare_pip)
+        if "claude mcp add" in section:
+            adds = [line for line in section.splitlines() if line.strip().startswith("claude mcp add")]
+            assert all(".venv" in line for line in adds), (path, adds)
+            assert "which python3" not in section, path
+    assert ".venv/" in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines()
+
+
 def test_claude_setup_guide_names_every_tool_the_user_can_ask_for():
     guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
     for name in ("load_persona", "list_adjustments", "remove_adjustment"):

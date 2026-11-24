@@ -18,32 +18,29 @@ Restart Claude Code. uv downloads the server and a recent Python the first time.
 
 This needs Python 3.10 or newer (check with `python3 --version`; the python3 that comes with macOS is 3.9).
 
-1. Install the dependencies:
+1. In the root of your clone, create a virtualenv and install the dependencies into it. Recent Pythons (from Homebrew, uv, Ubuntu or Debian) refuse `pip install` outside a virtualenv, and it keeps the server's packages apart from your other projects:
    ```bash
-   cd platform/claude
-   pip install -r requirements.txt
-   ```
-
-2. Add the MCP server to Claude Code:
-
-   **Find the full path of your Python** (the one you ran `pip install` with):
-   ```bash
-   # Windows
-   where python
+   python3 -m venv .venv
 
    # macOS/Linux
-   which python3
+   .venv/bin/pip install -r platform/claude/requirements.txt
+
+   # Windows
+   .venv\Scripts\pip install -r platform\claude\requirements.txt
    ```
 
-   **Find the full path of mcp_server.py:** in a terminal inside `platform/claude`, run `pwd` (macOS/Linux) or `cd` (Windows) and add `/mcp_server.py` to what it prints.
-
-   **Run one of these commands, with your two paths:**
+2. Add the MCP server to Claude Code, with the virtualenv's Python and the full path of mcp_server.py. On macOS/Linux, from the root of your clone:
    ```bash
    # For you, in every project
-   claude mcp add mindpersona -s user -- /full/path/to/python3 /full/path/to/mcp_server.py
+   claude mcp add mindpersona -s user -- "$(pwd)/.venv/bin/python" "$(pwd)/platform/claude/mcp_server.py"
 
    # Or only for the current project (saved in .mcp.json, so you can share it with your team)
-   claude mcp add mindpersona -s project -- /full/path/to/python3 /full/path/to/mcp_server.py
+   claude mcp add mindpersona -s project -- "$(pwd)/.venv/bin/python" "$(pwd)/platform/claude/mcp_server.py"
+   ```
+
+   On Windows, run `cd` in the root of your clone to see its full path, and use it in both places:
+   ```bash
+   claude mcp add mindpersona -s user -- C:\full\path\to\mindpersona\.venv\Scripts\python.exe C:\full\path\to\mindpersona\platform\claude\mcp_server.py
    ```
 
 3. Restart Claude Code (or close the window and open it again). `claude mcp list` should show `mindpersona: ... ✔ Connected`.
@@ -55,9 +52,10 @@ If `claude mcp list` shows `✘ Failed to connect` for mindpersona, run the comm
 | Error | Fix |
 |-------|-----|
 | `MindPersona needs mcp 1.x` or `'Server' object has no attribute 'list_prompts'` | mcp 2.x is installed and your copy of MindPersona is from before it supported mcp 2. Update it (`git pull`, or install it again) |
-| `Failed to build cryptography` on an Intel Mac | Run `pip install -r requirements.txt` again. It installs a cryptography version that has Intel wheels |
-| `MindPersona needs Python 3.10 or newer`, or `No matching distribution found for mcp` from pip | Your Python is too old. Install Python 3.10 or newer, run `pip install -r requirements.txt` with it, and add the server again with its full path. Or use the quick setup with uv, which brings its own Python |
-| `No module named mcp` | The python in `claude mcp add` is not the one you installed the dependencies with. Add the server again with the full path from `which python3` |
+| `error: externally-managed-environment` from pip | You ran pip on your system Python, which Homebrew, uv, Ubuntu and Debian don't allow. Create the virtualenv from step 1 and use its pip and python |
+| `Failed to build cryptography` on an Intel Mac | Run `.venv/bin/pip install -r platform/claude/requirements.txt` again. It installs a cryptography version that has Intel wheels |
+| `MindPersona needs Python 3.10 or newer`, or `No matching distribution found for mcp` from pip | Your Python is too old. Install Python 3.10 or newer, delete `.venv`, create it again with the new Python (for example `python3.12 -m venv .venv`), install the dependencies and add the server again. Or use the quick setup with uv, which brings its own Python |
+| `No module named mcp` | The python in `claude mcp add` is not the one you installed the dependencies with. Add the server again with the full path of the virtualenv's python (`.venv/bin/python`, or `.venv\Scripts\python.exe` on Windows) |
 
 ## Usage
 

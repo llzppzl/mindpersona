@@ -116,11 +116,12 @@ Restart Claude Code and pick a persona with `/`. uv downloads the server and a r
 ```bash
 git clone https://github.com/llzppzl/mindpersona.git
 cd mindpersona
-python3 -m pip install -r platform/claude/requirements.txt
-claude mcp add mindpersona -s user -- "$(which python3)" "$(pwd)/platform/claude/mcp_server.py"
+python3 -m venv .venv
+.venv/bin/pip install -r platform/claude/requirements.txt
+claude mcp add mindpersona -s user -- "$(pwd)/.venv/bin/python" "$(pwd)/platform/claude/mcp_server.py"
 ```
 
-This needs Python 3.10 or newer (check with `python3 --version`; the python3 that comes with macOS is 3.9). Restart Claude Code. Then:
+This needs Python 3.10 or newer (check with `python3 --version`; the python3 that comes with macOS is 3.9). The dependencies go into a virtualenv in `.venv`, because recent Pythons (from Homebrew, uv, Ubuntu or Debian) refuse `pip install` outside one. On Windows, use `.venv\Scripts\pip` and the full path of `.venv\Scripts\python.exe`. Restart Claude Code. Then:
 
 | You type | What happens |
 |----------|--------------|

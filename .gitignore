@@ -14,3 +14,5 @@ NEXT_VERSION_ISSUES.md
 # Python
 __pycache__/
 *.pyc
+# The virtualenv the setup guides create
+.venv/

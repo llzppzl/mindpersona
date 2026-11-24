@@ -7,11 +7,12 @@
 git clone https://github.com/llzppzl/mindpersona.git
 cd mindpersona
 
-# Install dependencies
-pip install -r platform/claude/requirements.txt pytest
+# Install dependencies into a virtualenv (on Windows: .venv\Scripts\pip and .venv\Scripts\python)
+python3 -m venv .venv
+.venv/bin/pip install -r platform/claude/requirements.txt pytest
 
 # Run the tests
-python -m pytest platform/claude/tests -v
+.venv/bin/python -m pytest platform/claude/tests -v
 ```
 
 ## Changing or adding a persona
