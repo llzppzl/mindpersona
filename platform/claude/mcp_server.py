@@ -252,13 +252,21 @@ def _section_end(lines: list[str], header: int) -> int:
     return next((i for i in range(header + 1, len(lines)) if SECTION_HEADING.match(lines[i])), len(lines))
 
 
+# A Markdown heading line, with its text in group 1: "## Your personal adjustments ##" -> the words
+HEADING_TEXT = re.compile(r"^\s*#{1,6}\s+(.*?)[\s#]*$")
+
+
 def is_adjustments_header(line: str) -> bool:
-    """Whether line is the adjustments heading, also as written by hand: in any case, with extra
-    spaces or with a closing "#". Before, only the exact text counted, so the adjustments under a
-    hand-written "## Your Personal Adjustments" were not loaded or listed, and the next save added a
-    second heading at the end of the file."""
-    words = " ".join(line.strip().rstrip("#").split()).casefold()
-    return any(words == " ".join(h.split()).casefold() for h in ADJUSTMENTS_HEADERS)
+    """Whether line is the adjustments heading, also as written by hand: in any case, at any heading
+    level, with extra spaces, a closing "#" or a final colon. Before, only the exact text counted, so
+    the adjustments under a hand-written "## Your Personal Adjustments" were not loaded or listed,
+    and the next save added a second heading at the end of the file. The same still happened with
+    "# Your personal adjustments", "### Your personal adjustments" or "## Your personal adjustments:"."""
+    match = HEADING_TEXT.match(line)
+    if not match:
+        return False
+    words = " ".join(match.group(1).rstrip(":\uff1a ").split()).casefold()
+    return any(words == " ".join(h.lstrip("#").split()).casefold() for h in ADJUSTMENTS_HEADERS)
 
 
 def _sections(lines: list[str]) -> list[tuple[int, int]]:
@@ -267,8 +275,15 @@ def _sections(lines: list[str]) -> list[tuple[int, int]]:
     A file can have more than one: older versions added a second heading at the end when they
     missed the first (written by hand in another case, or behind a byte order mark). Before, only
     the first was read once that was fixed, so everything saved under the second one stopped being
-    loaded or listed, and was saved again under the first."""
-    return [(i, _section_end(lines, i)) for i, line in enumerate(lines) if is_adjustments_header(line)]
+    loaded or listed, and was saved again under the first.
+
+    A "### Your personal adjustments" inside another adjustments section is only a group in it, so
+    its entries are not counted twice."""
+    sections: list[tuple[int, int]] = []
+    for i, line in enumerate(lines):
+        if is_adjustments_header(line) and not (sections and i < sections[-1][1]):
+            sections.append((i, _section_end(lines, i)))
+    return sections
 
 
 def _indent(line: str) -> int:
