@@ -58,3 +58,17 @@ def test_instruction_and_descriptions_are_in_english():
     assert not CJK.search(field(tool, "inputSchema")["properties"]["feedback_summary"]["description"])
     for prompt in asyncio.run(mcp_server.list_prompts()):
         assert not CJK.search(prompt.description)
+
+
+def test_prompt_menu_says_what_each_persona_is_for():
+    # All sixteen prompts were described as "MindPersona <TYPE> persona", so the / menu in Claude
+    # Code gave no hint of which one to pick
+    prompts = {p.name: p.description for p in asyncio.run(mcp_server.list_prompts())}
+    assert len(prompts) == 16
+    assert prompts["mbti-intj"] == ("INTJ - Cold Chief of Staff: comparing options and giving a clear "
+                                    "verdict, critical review, setting priorities")
+    assert prompts["mbti-infp"].startswith("INFP - Trusted Partner: taking feelings first")
+    assert len(set(prompts.values())) == 16
+    for name, description in prompts.items():
+        assert description.startswith(name.removeprefix("mbti-").upper() + " - "), name
+        assert ": " in description, name

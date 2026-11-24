@@ -90,6 +90,18 @@ def get_mbti_type_from_filename(filename: str) -> Optional[str]:
     match = re.match(r"mbti-([a-z]{4})\.md$", filename, re.IGNORECASE)
     return match.group(1).upper() if match else None
 
+def persona_description(mbti_type: str, skill_text: str) -> str:
+    """What the prompt menu shows for a persona: the skill's title and what the persona is good for,
+    e.g. "INTJ - Cold Chief of Staff: comparing options and giving a clear verdict, ...".
+
+    Before, all sixteen said "MindPersona <TYPE> persona", so the / menu in Claude Code gave no hint
+    of which one to pick, and users had to look the types up in the README."""
+    first = skill_text.lstrip().splitlines()[0] if skill_text.strip() else ""
+    title = first[2:].strip() if first.startswith("# ") else mbti_type
+    good_for = dict(re.findall(r"^- ([A-Z]{4}): (.+)$", PERSONA_GUIDE, re.MULTILINE)).get(mbti_type)
+    return f"{title}: {good_for}" if good_for else title
+
+
 def scan_skills() -> list[dict]:
     """List the MBTI prompts in skills/"""
     prompts = []
@@ -99,7 +111,7 @@ def scan_skills() -> list[dict]:
             prompts.append({
                 "type": mbti_type,
                 "filepath": filepath,
-                "description": f"MindPersona {mbti_type} persona"
+                "description": persona_description(mbti_type, filepath.read_text(encoding="utf-8"))
             })
     return prompts
 
