@@ -19,6 +19,22 @@ def test_security_page_names_every_tool_that_changes_saved_adjustments():
         assert f"`{name}`" in security
 
 
+def test_security_page_says_where_every_install_saves_adjustments():
+    # It said only the uvx install saves to ~/.mindpersona/memory, and told everyone to open
+    # memory/customized-*.md to delete lines. Every installed mindpersona command (uvx or pip) uses
+    # the home folder, so those users were sent to a folder that has none of their adjustments
+    security = (REPO / "SECURITY.md").read_text(encoding="utf-8")
+    stored = security.split("## What is stored", 1)[1].split("\n## ", 1)[0]
+    cli = (REPO / "mindpersona" / "cli.py").read_text(encoding="utf-8")
+    assert 'DEFAULT_MEMORY_DIR = Path.home() / ".mindpersona" / "memory"' in cli
+    assert "`~/.mindpersona/memory`" in stored
+    assert "`pip install`" in stored and "`uvx`" in stored
+    assert "`MINDPERSONA_MEMORY_DIR`" in stored
+    assert "open `memory/customized-*.md`" not in security
+    from mcp_server import call_tool
+    assert "File: {path}" in Path(call_tool.__code__.co_filename).read_text(encoding="utf-8")
+
+
 def test_contributing_lists_the_sections_every_skill_has():
     # It listed "suitable tasks, interaction layer, ..." while the files use other headings
     contributing = (REPO / "CONTRIBUTING.md").read_text(encoding="utf-8")
