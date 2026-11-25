@@ -157,6 +157,22 @@ def test_clone_setup_installs_into_a_virtualenv():
     assert ".venv/" in (REPO / ".gitignore").read_text(encoding="utf-8").splitlines()
 
 
+def test_every_clone_command_runs_the_server_with_the_virtualenv_python():
+    # The "Default persona" example ran `python /absolute/path/to/mcp_server.py --persona intj`.
+    # The dependencies are in .venv, so that python had no mcp ("No module named mcp"), and macOS
+    # has no `python` command at all, so the server failed to connect
+    for path in (REPO / "readme.md", REPO / "platform" / "claude" / "README.md"):
+        adds = [line for line in path.read_text(encoding="utf-8").splitlines()
+                if line.strip().startswith("claude mcp add") and "mcp_server.py" in line]
+        assert adds, path
+        unix = [line for line in adds if "\\" not in line]
+        assert unix, path
+        for line in unix:
+            assert '"$(pwd)/.venv/bin/python" "$(pwd)/platform/claude/mcp_server.py"' in line, (path, line)
+        for line in adds:
+            assert ".venv" in line, (path, line)
+
+
 def test_claude_setup_guide_names_every_tool_the_user_can_ask_for():
     guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
     for name in ("load_persona", "list_adjustments", "remove_adjustment"):

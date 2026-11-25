@@ -85,8 +85,8 @@ To use one persona in every session without typing a prompt, add `--persona <typ
 # With the quick setup
 claude mcp add mindpersona -s user -- uvx --from git+https://github.com/llzppzl/mindpersona mindpersona --persona intj
 
-# From a clone
-claude mcp add mindpersona -s user -- python /absolute/path/to/mcp_server.py --persona intj
+# From a clone (run in its root, after the setup above)
+claude mcp add mindpersona -s user -- "$(pwd)/.venv/bin/python" "$(pwd)/platform/claude/mcp_server.py" --persona intj
 ```
 
 The persona, with your saved adjustments, is sent to Claude as the server's instructions when a session starts. You can still switch to another persona with a `/mcp__mindpersona__mbti-<type>` prompt or by asking for it. Instead of `--persona` you can set the `MINDPERSONA_PERSONA` environment variable (`claude mcp add ... -e MINDPERSONA_PERSONA=intj -- ...`). To stop using a default, remove the server and add it again without `--persona`. An unknown type stops the server with a message listing the valid types.
