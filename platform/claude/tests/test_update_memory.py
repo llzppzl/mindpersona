@@ -151,6 +151,15 @@ def test_same_adjustment_in_other_case_bullet_or_punctuation_is_not_saved_twice(
     assert append_to_customized("intj", "Lead with the conclusion, then the risks")[1] == "Feedback saved"
 
 
+def test_summary_starting_with_a_marker_character_is_not_saved_twice(temp_memory_dir):
+    """A leading "*", "-" or "+" that is part of the text (bold, a flag, "+1") was taken for a
+    bullet in the summary but not in its saved line, so the same summary was saved every time"""
+    for summary in ("**Bold** the conclusion", "-v flags in examples", "+1 example per answer"):
+        assert append_to_customized("intj", summary)[1] == "Feedback saved", summary
+        assert "already saved" in append_to_customized("intj", summary)[1], summary
+        assert read(temp_memory_dir).count(summary) == 1, summary
+
+
 def test_bracketed_words_in_front_of_an_entry_are_not_taken_for_a_time(temp_memory_dir):
     """Only a time in brackets is skipped when comparing. Before, "(Only in code reviews)" was too,
     so a general "Use tables" was reported as already saved and never added"""

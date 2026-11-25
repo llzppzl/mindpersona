@@ -345,16 +345,21 @@ def joined_entry(lines: list[str], entry: list[int]) -> str:
     return text
 
 
-def _add_entry(content: str, new_entry: str, summary: str) -> Optional[str]:
+def _add_entry(content: str, new_entry: str) -> Optional[str]:
     """Insert new_entry after the last entry under PERSONAL_ADJUSTMENTS_HEADER.
-    Returns None if this adjustment is already saved."""
+    Returns None if this adjustment is already saved.
+
+    The new entry is compared as it will be saved, with its bullet and time. Before, the bare
+    summary was, and entry_key took a leading "*", "-" or "+" of it for a bullet: "**Bold** the
+    conclusion" or "-v flags in examples" never matched its own saved line and was saved again
+    every time."""
     lines = content.splitlines(keepends=True)
     header, entries = _section_entries(lines)
     if header is None:
         # No PERSONAL_ADJUSTMENTS_HEADER yet: add it at the end of the file
         return content.rstrip() + f"\n\n{PERSONAL_ADJUSTMENTS_HEADER}\n\n{new_entry}"
 
-    if any(entry_key(joined_entry(lines, e)) == entry_key(summary) for e in entries):
+    if any(entry_key(joined_entry(lines, e)) == entry_key(new_entry) for e in entries):
         return None
 
     # New entries go in the ungrouped part of the first section, before the first "### ..." heading
@@ -462,7 +467,7 @@ def append_to_customized(mbti_type: str, feedback_summary: str) -> tuple[bool, s
                 # No file yet: create it with the first entry
                 content = get_customized_template(mbti_lower, summary)
             else:
-                content = _add_entry(read_customized(customized_file), new_entry, summary)
+                content = _add_entry(read_customized(customized_file), new_entry)
                 if content is None:
                     return True, "This adjustment was already saved, so it was not added again"
             write_safely(customized_file, content)
