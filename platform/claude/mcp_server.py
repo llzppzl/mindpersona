@@ -244,12 +244,42 @@ SECTION_HEADING = re.compile(r"^#{1,2}(\s|$)")
 GROUP_HEADING = re.compile(r"^\s*#+(\s|$)")
 
 
-def _section_end(lines: list[str], header: int) -> int:
+# The line that opens or closes a fenced code block: ``` or ~~~ (three or more), maybe indented
+FENCE = re.compile(r"^\s*(`{3,}|~{3,})")
+
+
+def fenced_lines(lines: list[str]) -> set[int]:
+    """The indexes of the lines in fenced code blocks, with the fence lines themselves. A block
+    that is never closed runs to the end of the file, as in Markdown.
+
+    A hand-written adjustment can show an example in a code block, and a "# comment" line in it is
+    not a heading. Before, it ended the adjustments section, so every adjustment after the block
+    was neither loaded nor listed, and the fence line "```" was listed as an adjustment."""
+    fenced: set[int] = set()
+    opening = None
+    for i, line in enumerate(lines):
+        match = FENCE.match(line)
+        if opening is None:
+            if match:
+                opening = match.group(1)
+                fenced.add(i)
+        else:
+            fenced.add(i)
+            if match and match.group(1)[0] == opening[0] and len(match.group(1)) >= len(opening) \
+                    and not line.strip().lstrip(opening[0]):
+                opening = None
+    return fenced
+
+
+def _section_end(lines: list[str], header: int, fenced: Optional[set[int]] = None) -> int:
     """The index of the line after the adjustments section that starts at lines[header].
 
     Before, any line starting with "#" ended it, so adjustments grouped under a "### Formatting"
-    heading were never loaded or listed, though they were in the file."""
-    return next((i for i in range(header + 1, len(lines)) if SECTION_HEADING.match(lines[i])), len(lines))
+    heading were never loaded or listed, though they were in the file. A line in a code block does
+    not end it either (see fenced_lines)."""
+    fenced = fenced_lines(lines) if fenced is None else fenced
+    return next((i for i in range(header + 1, len(lines))
+                 if i not in fenced and SECTION_HEADING.match(lines[i])), len(lines))
 
 
 # A Markdown heading line, with its text in group 1: "## Your personal adjustments ##" -> the words
@@ -280,9 +310,10 @@ def _sections(lines: list[str]) -> list[tuple[int, int]]:
     A "### Your personal adjustments" inside another adjustments section is only a group in it, so
     its entries are not counted twice."""
     sections: list[tuple[int, int]] = []
+    fenced = fenced_lines(lines)
     for i, line in enumerate(lines):
-        if is_adjustments_header(line) and not (sections and i < sections[-1][1]):
-            sections.append((i, _section_end(lines, i)))
+        if i not in fenced and is_adjustments_header(line) and not (sections and i < sections[-1][1]):
+            sections.append((i, _section_end(lines, i, fenced)))
     return sections
 
 
@@ -309,15 +340,19 @@ def _section_entries(lines: list[str]) -> tuple[Optional[int], list[list[int]]]:
     if not sections:
         return None, []
     entries: list[list[int]] = []
+    fenced = fenced_lines(lines)
     for header, section_end in sections:
         section = "".join(line if line.endswith("\n") else line + "\n" for line in lines[header + 1:section_end])
         # Blank out the comments that extract_adjustments removes, keeping the line count
         section = COMMENT_BLOCK.sub(lambda m: "\n" * m.group(0).count("\n"), section)
         current: Optional[list[int]] = None
         for n, line in enumerate(section.splitlines()):
-            if not line.strip():
+            if current and header + 1 + n in fenced:
+                # A code block, blank lines included, belongs to the entry above it, like an indented line
+                current.append(header + 1 + n)
+            elif not line.strip():
                 continue
-            if GROUP_HEADING.match(line):
+            elif GROUP_HEADING.match(line) and header + 1 + n not in fenced:
                 current = None
             elif current and _indent(line) > _indent(lines[current[0]]):
                 current.append(header + 1 + n)
@@ -341,7 +376,9 @@ def joined_entry(lines: list[str], entry: list[int]) -> str:
     text = lines[entry[0]].strip()
     for i in entry[1:]:
         line = lines[i].strip()
-        text += f"; {entry_text(line)}" if re.match(LIST_MARKER, line) else f" {line}"
+        if not line:
+            continue  # a blank line in a code block
+        text +=f"; {entry_text(line)}" if re.match(LIST_MARKER, line) else f" {line}"
     return text
 
 
@@ -364,8 +401,10 @@ def _add_entry(content: str, new_entry: str) -> Optional[str]:
 
     # New entries go in the ungrouped part of the first section, before the first "### ..." heading
     # the user added
-    first_end = _section_end(lines, header)
-    first_group = next((i for i in range(header + 1, first_end) if GROUP_HEADING.match(lines[i])), first_end)
+    fenced = fenced_lines(lines)
+    first_end = _section_end(lines, header, fenced)
+    first_group = next((i for i in range(header + 1, first_end)
+                        if i not in fenced and GROUP_HEADING.match(lines[i])), first_end)
     ungrouped = [e for e in entries if e[0] < first_group]
     if ungrouped:
         insert_at = ungrouped[-1][-1] + 1
