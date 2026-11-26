@@ -189,6 +189,15 @@ def test_every_clone_command_runs_the_server_with_the_virtualenv_python():
             assert ".venv" in line, (path, line)
 
 
+def test_claude_md_numbers_adjustments_with_code_blocks_like_the_server():
+    # In-repo mode lists the adjustments by CLAUDE.md's rules, and "Forget number 2" must remove
+    # the same entry as the server. The server keeps a code block with the entry above it and
+    # does not take a "#" line in one for a heading; CLAUDE.md did not say so
+    claude_md = " ".join((REPO / "CLAUDE.md").read_text(encoding="utf-8").split())
+    assert "so is a fenced code block (``` or ~~~) below it" in claude_md
+    assert "a `#` line inside a code block is not a heading" in claude_md
+
+
 def test_claude_setup_guide_names_every_tool_the_user_can_ask_for():
     guide = (REPO / "platform" / "claude" / "README.md").read_text(encoding="utf-8")
     for name in ("load_persona", "list_adjustments", "remove_adjustment"):
