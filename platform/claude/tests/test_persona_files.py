@@ -423,6 +423,16 @@ def test_istp_rules_say_what_to_do():
     assert own_way and "would fail" in own_way.group(1)
 
 
+def test_istp_says_how_much_to_explain():
+    # Its north star is "how things work", but long explanations of the principles are one of its
+    # frustrations, and no rule said how much to explain: the model either left out why the fix
+    # works or wrote the long explanation this type dislikes
+    skill = (SKILLS / "mbti-istp.md").read_text(encoding="utf-8")
+    assert "how things work" in skill and "long explanations of the principles" in skill
+    after = re.search(r"^  - After the fix, say how it works in one or two lines: (.*)$", architecture("istp"), re.MULTILINE)
+    assert after and "why the fix works" in after.group(1) and "only when the user asks" in after.group(1)
+
+
 def test_infj_says_how_to_understand_the_motive_first():
     # The output format says "understand the motive first, then advise", but "First understand what
     # the user really wants" and "Help the user see the 'why'" did not say how, so the model either
